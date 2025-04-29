@@ -14,7 +14,7 @@ import {
   MessageSquare, 
   ListTodo, 
   FileText, 
-  Timeline,
+  Calendar as CalendarIcon,
   Share
 } from "lucide-react";
 
@@ -126,7 +126,7 @@ const ProjectDetails = () => {
                   Chat
                 </TabsTrigger>
                 <TabsTrigger value="timeline">
-                  <Timeline className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-2 h-4 w-4" />
                   Timeline
                 </TabsTrigger>
               </TabsList>
