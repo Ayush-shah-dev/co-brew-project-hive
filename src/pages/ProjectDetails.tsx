@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import KanbanBoard from "@/components/projects/KanbanBoard";
@@ -15,48 +15,124 @@ import {
   ListTodo, 
   FileText, 
   Calendar as CalendarIcon,
-  Share
+  Share,
+  ArrowRight,
+  Loader2,
+  Trash2,
+  Edit
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { getProjectById, getProjectMembers, deleteProject, StartupProject } from "@/services/projectService";
 
 const ProjectDetails = () => {
   const { id, tab = "overview" } = useParams<{ id: string; tab: string }>();
   const [activeTab, setActiveTab] = useState(tab);
+  const [project, setProject] = useState<StartupProject | null>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  const isCreator = user?.id === project?.creator_id;
 
-  // This would be fetched from an API based on the project ID
-  const project = {
-    title: "Co-Brew Platform Development",
-    description: "Building a collaborative project management platform for teams to ideate, plan, and execute projects together in real-time.",
-    progress: 65,
-    status: "active",
-    teamSize: 4,
-    startDate: "2024-01-15",
-    dueDate: "2024-05-20",
-    members: [
-      {
-        id: "1",
-        name: "Alex Chen",
-        avatar: "https://i.pravatar.cc/150?img=5",
-        role: "Admin"
-      },
-      {
-        id: "2",
-        name: "Sarah Kim",
-        avatar: "https://i.pravatar.cc/150?img=1",
-        role: "Collaborator"
-      },
-      {
-        id: "3",
-        name: "Mike Johnson",
-        avatar: "https://i.pravatar.cc/150?img=3",
-        role: "Collaborator"
-      },
-      {
-        id: "4",
-        name: "Priya Sharma",
-        avatar: "https://i.pravatar.cc/150?img=6",
-        role: "Viewer"
-      }
-    ]
+  useEffect(() => {
+    if (id) {
+      const fetchProjectData = async () => {
+        setLoading(true);
+        try {
+          const projectData = await getProjectById(id);
+          setProject(projectData);
+          
+          const membersData = await getProjectMembers(id);
+          setMembers(membersData);
+        } catch (error) {
+          console.error("Failed to load project data", error);
+          toast.error("Failed to load project data");
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchProjectData();
+    }
+  }, [id]);
+
+  const handleDeleteProject = async () => {
+    if (!id) return;
+    
+    try {
+      await deleteProject(id);
+      toast.success("Project deleted successfully");
+      navigate("/projects");
+    } catch (error) {
+      console.error("Failed to delete project", error);
+      toast.error("Failed to delete project");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <Navbar />
+          <main className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-cobrew-600" />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <Navbar />
+          <main className="flex-1 p-6">
+            <div className="container mx-auto">
+              <h1 className="text-2xl font-bold mb-4">Project not found</h1>
+              <p className="mb-4">The project you're looking for doesn't exist or you don't have access to it.</p>
+              <Button onClick={() => navigate("/projects")}>
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Back to Projects
+              </Button>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  const renderStageTag = (stage: string) => {
+    const stageColors: Record<string, string> = {
+      'idea': 'bg-blue-100 text-blue-800',
+      'mvp': 'bg-yellow-100 text-yellow-800',
+      'growth': 'bg-green-100 text-green-800',
+      'scaling': 'bg-purple-100 text-purple-800',
+    };
+    
+    return (
+      <Badge className={stageColors[stage] || 'bg-gray-100 text-gray-800'}>
+        {stage}
+      </Badge>
+    );
   };
 
   return (
@@ -70,35 +146,55 @@ const ProjectDetails = () => {
             <div className="mb-8">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-3xl font-bold">{project.title}</h1>
+                  <div className="flex items-center mb-2">
+                    <h1 className="text-3xl font-bold mr-3">{project.title}</h1>
+                    {renderStageTag(project.stage)}
+                    <Badge variant="outline" className="ml-2">{project.category}</Badge>
+                  </div>
                   <p className="text-muted-foreground mt-2 max-w-2xl">
                     {project.description}
                   </p>
                 </div>
-                <Button className="bg-cobrew-600 hover:bg-cobrew-700">
-                  <Share className="mr-2 h-4 w-4" />
-                  Share
-                </Button>
+                <div className="flex gap-2">
+                  {isCreator && (
+                    <>
+                      <Button variant="outline" onClick={() => toast.info("Edit functionality would be implemented here")}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" className="text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteDialogOpen(true)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </>
+                  )}
+                  <Button className="bg-cobrew-600 hover:bg-cobrew-700">
+                    <Share className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                </div>
               </div>
               
               <div className="flex flex-wrap gap-6 mt-6">
                 <div className="flex items-center text-sm">
                   <Calendar size={16} className="mr-1 text-muted-foreground" />
-                  <span className="text-muted-foreground mr-1">Timeline:</span>
+                  <span className="text-muted-foreground mr-1">Created:</span>
                   <span>
-                    {new Date(project.startDate).toLocaleDateString()} - {new Date(project.dueDate).toLocaleDateString()}
+                    {new Date(project.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
                   <Users size={16} className="mr-1 text-muted-foreground" />
                   <span className="text-muted-foreground mr-1">Team:</span>
-                  <span>{project.teamSize} members</span>
+                  <span>{members.length} members</span>
                 </div>
-                <div className="flex items-center text-sm">
-                  <Clock size={16} className="mr-1 text-muted-foreground" />
-                  <span className="text-muted-foreground mr-1">Progress:</span>
-                  <span>{project.progress}% complete</span>
-                </div>
+                {project.funding_goal > 0 && (
+                  <div className="flex items-center text-sm">
+                    <Clock size={16} className="mr-1 text-muted-foreground" />
+                    <span className="text-muted-foreground mr-1">Funding Goal:</span>
+                    <span>${project.funding_goal.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -135,31 +231,96 @@ const ProjectDetails = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
                     <h2 className="text-xl font-semibold mb-4">Project Overview</h2>
-                    <p className="text-muted-foreground mb-6">
-                      This page would contain a summary dashboard with key metrics, recent activities,
-                      and upcoming milestones.
-                    </p>
-                    <div className="p-12 border border-dashed rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Project overview dashboard will be displayed here</p>
+                    <div className="bg-card rounded-lg border p-6 mb-6">
+                      <h3 className="text-lg font-medium mb-4">About this startup</h3>
+                      <p className="text-muted-foreground mb-6">
+                        {project.description}
+                      </p>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium mb-2">Category</h4>
+                          <Badge variant="outline">{project.category}</Badge>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium mb-2">Stage</h4>
+                          {renderStageTag(project.stage)}
+                        </div>
+                        
+                        {project.tags && project.tags.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Tags</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {project.tags.map((tag, idx) => (
+                                <Badge key={idx} variant="secondary">{tag}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {project.funding_goal > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Funding Goal</h4>
+                            <p>${project.funding_goal.toLocaleString()}</p>
+                          </div>
+                        )}
+                        
+                        {project.pitch_deck_url && (
+                          <div>
+                            <h4 className="font-medium mb-2">Resources</h4>
+                            <div className="flex items-center">
+                              <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                              <a 
+                                href={project.pitch_deck_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-cobrew-600 hover:underline"
+                              >
+                                Pitch Deck
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
                   <div>
                     <h2 className="text-xl font-semibold mb-4">Team Members</h2>
                     <div className="space-y-3">
-                      {project.members.map(member => (
+                      {members.length > 0 ? members.map(member => (
                         <div key={member.id} className="flex items-center justify-between p-3 bg-card rounded-lg border">
                           <div className="flex items-center">
                             <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden mr-3">
-                              <img src={member.avatar} alt={member.name} />
+                              {member.user?.avatar_url ? (
+                                <img src={member.user.avatar_url} alt={`${member.user.first_name} ${member.user.last_name}`} />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-cobrew-100 text-cobrew-800 font-medium">
+                                  {member.user?.first_name?.[0] || '?'}
+                                </div>
+                              )}
                             </div>
                             <div>
-                              <p className="font-medium">{member.name}</p>
-                              <p className="text-xs text-muted-foreground">{member.role}</p>
+                              <p className="font-medium">
+                                {member.user?.first_name} {member.user?.last_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
                             </div>
                           </div>
                         </div>
-                      ))}
+                      )) : (
+                        <p className="text-muted-foreground">No team members found.</p>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => toast.info("Invite functionality would be implemented here")}
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Invite Members
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -199,6 +360,26 @@ const ProjectDetails = () => {
           </div>
         </main>
       </div>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the project along with all associated data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteProject}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete Project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
