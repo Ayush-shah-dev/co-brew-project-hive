@@ -13,13 +13,13 @@ import {
   Rocket,
 } from "lucide-react";
 import { useState } from "react";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const { signOut } = useAuth();
   
   // Don't show sidebar on mobile
