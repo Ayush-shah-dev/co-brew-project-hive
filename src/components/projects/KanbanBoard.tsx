@@ -1,6 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import KanbanColumn from "./KanbanColumn";
+import { getProjectIdeas, updateIdeaStatus, ProjectIdea } from "@/services/ideaService";
+import { useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 export interface KanbanItem {
   id: string;
@@ -20,124 +23,135 @@ interface KanbanColumn {
   items: KanbanItem[];
 }
 
-// Sample kanban data
-const initialColumns: KanbanColumn[] = [
-  {
-    id: "to-explore",
-    title: "To Explore",
-    items: [
-      {
-        id: "item-1",
-        title: "User authentication system",
-        description: "Implement secure login with OAuth and email verification",
-        priority: "high",
-      },
-      {
-        id: "item-2",
-        title: "Real-time collaboration",
-        description: "Research WebSocket solutions for real-time updates",
-        assignee: {
-          name: "Sarah Kim",
-          avatar: "https://i.pravatar.cc/150?img=1",
-        },
-        priority: "medium",
-      },
-      {
-        id: "item-3",
-        title: "Mobile responsive design",
-        description: "Ensure all pages work well on mobile devices",
-        priority: "low",
-      },
-    ],
-  },
-  {
-    id: "in-progress",
-    title: "In Progress",
-    items: [
-      {
-        id: "item-4",
-        title: "Dashboard UI design",
-        description: "Create wireframes and high-fidelity mockups",
-        assignee: {
-          name: "Mike Johnson",
-          avatar: "https://i.pravatar.cc/150?img=3",
-        },
-        priority: "high",
-        dueDate: "2024-05-10",
-      },
-      {
-        id: "item-5",
-        title: "Database schema design",
-        description: "Design normalized schema for project requirements",
-        priority: "medium",
-      },
-    ],
-  },
-  {
-    id: "finalized",
-    title: "Finalized",
-    items: [
-      {
-        id: "item-6",
-        title: "Project requirements",
-        description: "Document core features and user stories",
-        assignee: {
-          name: "Alex Chen",
-          avatar: "https://i.pravatar.cc/150?img=5",
-        },
-        priority: "high",
-      },
-      {
-        id: "item-7",
-        title: "Tech stack selection",
-        description: "Evaluate and select technologies for the project",
-        assignee: {
-          name: "Priya Sharma",
-          avatar: "https://i.pravatar.cc/150?img=6",
-        },
-        priority: "medium",
-      },
-    ],
-  },
-];
-
 const KanbanBoard = () => {
-  const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns);
+  const { id: projectId } = useParams<{ id: string }>();
+  const [loading, setLoading] = useState(true);
+  const [ideas, setIdeas] = useState<ProjectIdea[]>([]);
+  
+  const [columns, setColumns] = useState<KanbanColumn[]>([
+    {
+      id: "to_explore",
+      title: "To Explore",
+      items: [],
+    },
+    {
+      id: "in_progress",
+      title: "In Progress",
+      items: [],
+    },
+    {
+      id: "finalized",
+      title: "Finalized",
+      items: [],
+    },
+  ]);
+
+  useEffect(() => {
+    const fetchIdeas = async () => {
+      if (!projectId) return;
+      
+      setLoading(true);
+      try {
+        const projectIdeas = await getProjectIdeas(projectId);
+        setIdeas(projectIdeas);
+        
+        // Transform project ideas into kanban items and organize by status
+        const newColumns = [...columns];
+        
+        // Reset items in each column
+        newColumns.forEach(col => {
+          col.items = [];
+        });
+        
+        // Distribute ideas to columns based on status
+        projectIdeas.forEach(idea => {
+          const column = newColumns.find(col => col.id === idea.status);
+          if (column) {
+            const kanbanItem: KanbanItem = {
+              id: idea.id,
+              title: idea.title,
+              description: idea.description || "",
+              priority: determinePriority(idea.votes),
+              assignee: idea.creator ? {
+                name: `${idea.creator.first_name} ${idea.creator.last_name}`,
+                avatar: idea.creator.avatar_url || "",
+              } : undefined,
+            };
+            column.items.push(kanbanItem);
+          }
+        });
+        
+        setColumns(newColumns);
+      } catch (error) {
+        console.error("Error fetching project ideas:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchIdeas();
+  }, [projectId]);
+
+  // Function to determine priority based on votes
+  const determinePriority = (votes?: number): "low" | "medium" | "high" => {
+    if (!votes) return "low";
+    if (votes >= 5) return "high";
+    if (votes >= 2) return "medium";
+    return "low";
+  };
 
   // Function to move an item from one column to another
-  const moveItem = (itemId: string, sourceColId: string, destColId: string) => {
+  const moveItem = async (itemId: string, sourceColId: string, destColId: string) => {
     if (sourceColId === destColId) return;
 
-    setColumns((prevColumns) => {
-      // Find the source column and item
-      const sourceCol = prevColumns.find((col) => col.id === sourceColId);
-      if (!sourceCol) return prevColumns;
+    try {
+      // Update the status in the database
+      await updateIdeaStatus(itemId, destColId as 'to_explore' | 'in_progress' | 'finalized');
       
-      const item = sourceCol.items.find((item) => item.id === itemId);
-      if (!item) return prevColumns;
-      
-      // Find the destination column
-      const destCol = prevColumns.find((col) => col.id === destColId);
-      if (!destCol) return prevColumns;
-      
-      // Create new columns array with the item moved
-      return prevColumns.map((col) => {
-        if (col.id === sourceColId) {
-          return {
-            ...col,
-            items: col.items.filter((i) => i.id !== itemId),
-          };
-        }
-        if (col.id === destColId) {
-          return {
-            ...col,
-            items: [...col.items, item],
-          };
-        }
-        return col;
+      // Update local state for immediate UI feedback
+      setColumns((prevColumns) => {
+        // Find the source column and item
+        const sourceCol = prevColumns.find((col) => col.id === sourceColId);
+        if (!sourceCol) return prevColumns;
+        
+        const itemIndex = sourceCol.items.findIndex((item) => item.id === itemId);
+        if (itemIndex === -1) return prevColumns;
+        
+        const item = sourceCol.items[itemIndex];
+        
+        // Find the destination column
+        const destCol = prevColumns.find((col) => col.id === destColId);
+        if (!destCol) return prevColumns;
+        
+        // Create new columns array with the item moved
+        return prevColumns.map((col) => {
+          if (col.id === sourceColId) {
+            return {
+              ...col,
+              items: col.items.filter((i) => i.id !== itemId),
+            };
+          }
+          if (col.id === destColId) {
+            return {
+              ...col,
+              items: [...col.items, item],
+            };
+          }
+          return col;
+        });
       });
-    });
+    } catch (error) {
+      console.error("Error updating idea status:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin h-8 w-8 text-cobrew-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 min-h-[500px]">
@@ -148,6 +162,7 @@ const KanbanBoard = () => {
           title={column.title}
           items={column.items}
           onMoveItem={moveItem}
+          projectId={projectId}
         />
       ))}
     </div>

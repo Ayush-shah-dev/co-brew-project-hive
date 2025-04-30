@@ -9,38 +9,58 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { createIdea } from "@/services/ideaService";
 
 interface KanbanColumnProps {
   id: string;
   title: string;
   items: KanbanItem[];
+  projectId?: string;
   onMoveItem: (itemId: string, sourceColId: string, destColId: string) => void;
 }
 
-const KanbanColumn = ({ id, title, items, onMoveItem }: KanbanColumnProps) => {
+const KanbanColumn = ({ id, title, items, projectId, onMoveItem }: KanbanColumnProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemDescription, setNewItemDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddItem = () => {
-    // This would typically make an API call
-    console.log("Adding new item:", {
-      title: newItemTitle,
-      description: newItemDescription,
-      columnId: id,
-    });
+  const handleAddItem = async () => {
+    if (!projectId) {
+      toast.error("Project ID is missing");
+      return;
+    }
     
-    toast.success("New idea added!");
+    setIsSubmitting(true);
     
-    // Reset and close
-    setNewItemTitle("");
-    setNewItemDescription("");
-    setIsDialogOpen(false);
+    try {
+      await createIdea({
+        project_id: projectId,
+        title: newItemTitle,
+        description: newItemDescription,
+        status: id as 'to_explore' | 'in_progress' | 'finalized'
+      });
+      
+      toast.success("New idea added successfully!");
+      
+      // Reset and close
+      setNewItemTitle("");
+      setNewItemDescription("");
+      setIsDialogOpen(false);
+      
+      // The parent component will refresh ideas from the database
+      window.location.reload(); // Simple approach - in a real app, we might use context or state management
+    } catch (error) {
+      console.error("Error adding new idea:", error);
+      toast.error("Failed to add new idea");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Simulate drag and drop capabilities
   const handleMoveRight = (itemId: string) => {
-    const columnIds = ["to-explore", "in-progress", "finalized"];
+    const columnIds = ["to_explore", "in_progress", "finalized"];
     const currentIndex = columnIds.indexOf(id);
     
     if (currentIndex < columnIds.length - 1) {
@@ -49,7 +69,7 @@ const KanbanColumn = ({ id, title, items, onMoveItem }: KanbanColumnProps) => {
   };
 
   const handleMoveLeft = (itemId: string) => {
-    const columnIds = ["to-explore", "in-progress", "finalized"];
+    const columnIds = ["to_explore", "in_progress", "finalized"];
     const currentIndex = columnIds.indexOf(id);
     
     if (currentIndex > 0) {
@@ -117,9 +137,9 @@ const KanbanColumn = ({ id, title, items, onMoveItem }: KanbanColumnProps) => {
             <Button 
               onClick={handleAddItem}
               className="bg-cobrew-600 hover:bg-cobrew-700"
-              disabled={!newItemTitle.trim()}
+              disabled={!newItemTitle.trim() || isSubmitting}
             >
-              Add Idea
+              {isSubmitting ? "Adding..." : "Add Idea"}
             </Button>
           </DialogFooter>
         </DialogContent>
