@@ -72,11 +72,20 @@ const KanbanBoard = () => {
               title: idea.title,
               description: idea.description || "",
               priority: determinePriority(idea.votes),
-              assignee: idea.creator ? {
-                name: `${idea.creator.first_name} ${idea.creator.last_name}`,
-                avatar: idea.creator.avatar_url || "",
-              } : undefined,
             };
+
+            // Add assignee info if creator data is available
+            if (idea.creator) {
+              const firstName = idea.creator.first_name || '';
+              const lastName = idea.creator.last_name || '';
+              const fullName = `${firstName} ${lastName}`.trim() || 'Unknown User';
+              
+              kanbanItem.assignee = {
+                name: fullName,
+                avatar: idea.creator.avatar_url || "",
+              };
+            }
+            
             column.items.push(kanbanItem);
           }
         });
