@@ -19,7 +19,8 @@ import {
   ArrowRight,
   Loader2,
   Trash2,
-  Edit
+  Edit,
+  UserPlus
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { getProjectById, getProjectMembers, deleteProject, StartupProject } from "@/services/projectService";
+import ApplyProjectForm from "@/components/projects/ApplyProjectForm";
+import ApplicationsList from "@/components/projects/ApplicationsList";
 
 const ProjectDetails = () => {
   const { id, tab = "overview" } = useParams<{ id: string; tab: string }>();
@@ -49,6 +52,7 @@ const ProjectDetails = () => {
   const queryClient = useQueryClient();
   
   const isCreator = user?.id === project?.creator_id;
+  const isMember = members.some(member => member.user_id === user?.id);
 
   useEffect(() => {
     if (id) {
@@ -168,6 +172,9 @@ const ProjectDetails = () => {
                       </Button>
                     </>
                   )}
+                  {!isCreator && !isMember && user && (
+                    <ApplyProjectForm projectId={id} projectTitle={project.title} />
+                  )}
                   <Button className="bg-cobrew-600 hover:bg-cobrew-700">
                     <Share className="mr-2 h-4 w-4" />
                     Share
@@ -199,8 +206,8 @@ const ProjectDetails = () => {
             </div>
 
             {/* Project Tabs */}
-            <Tabs defaultValue="ideas" className="mb-6">
-              <TabsList className="grid grid-cols-3 md:grid-cols-6 lg:inline-flex">
+            <Tabs defaultValue={tab} value={activeTab} onValueChange={setActiveTab} className="mb-6">
+              <TabsList className="grid grid-cols-3 md:grid-cols-7 lg:inline-flex">
                 <TabsTrigger value="overview">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   Overview
@@ -225,6 +232,12 @@ const ProjectDetails = () => {
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   Timeline
                 </TabsTrigger>
+                {isCreator && (
+                  <TabsTrigger value="applications">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Applications
+                  </TabsTrigger>
+                )}
               </TabsList>
               
               <TabsContent value="overview" className="mt-6">
@@ -354,6 +367,13 @@ const ProjectDetails = () => {
               <TabsContent value="timeline" className="mt-6">
                 <div className="p-12 border border-dashed rounded-lg flex items-center justify-center">
                   <p className="text-muted-foreground">Gantt chart timeline will be displayed here</p>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="applications" className="mt-6">
+                <div>
+                  <h2 className="text-xl font-semibold mb-6">Applications</h2>
+                  {id && isCreator && <ApplicationsList projectId={id} />}
                 </div>
               </TabsContent>
             </Tabs>
