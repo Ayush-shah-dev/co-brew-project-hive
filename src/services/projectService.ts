@@ -68,6 +68,7 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
+    // Fetch all projects without any user filtering
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
