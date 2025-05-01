@@ -132,32 +132,62 @@ export async function getUserApplications(): Promise<ProjectApplication[]> {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     
-    const { data, error } = await supabase
+    // First get the application data
+    const { data: applicationsData, error: applicationsError } = await supabase
       .from('project_applications')
-      .select(`
-        *,
-        project:startup_projects!project_id (
-          title,
-          description,
-          category,
-          stage
-        )
-      `)
+      .select('*')
       .eq('applicant_id', userData.user.id);
       
-    if (error) {
-      console.error("Error in query:", error);
-      throw error;
+    if (applicationsError) {
+      console.error("Error fetching applications:", applicationsError);
+      throw applicationsError;
     }
     
-    // Type cast to ensure compatibility with the ProjectApplication type
-    const typedData = data?.map(item => ({
-      ...item,
-      status: item.status as 'pending' | 'approved' | 'rejected',
-      project: item.project as ProjectApplication['project']
-    })) || [];
+    if (!applicationsData || applicationsData.length === 0) {
+      return [];
+    }
     
-    return typedData;
+    // Get all unique project IDs
+    const projectIds = Array.from(new Set(applicationsData.map(app => app.project_id)));
+    
+    // Then fetch the associated projects separately
+    const { data: projectsData, error: projectsError } = await supabase
+      .from('startup_projects')
+      .select('id, title, description, category, stage')
+      .in('id', projectIds);
+      
+    if (projectsError) {
+      console.error("Error fetching projects:", projectsError);
+      // Continue without project data rather than failing completely
+    }
+    
+    // Create a map of projects for quick lookup
+    const projectsMap: Record<string, any> = {};
+    if (projectsData) {
+      projectsData.forEach(project => {
+        projectsMap[project.id] = {
+          title: project.title,
+          description: project.description,
+          category: project.category,
+          stage: project.stage
+        };
+      });
+    }
+    
+    // Combine applications with their project data
+    return applicationsData.map(application => {
+      return {
+        ...application,
+        status: application.status as 'pending' | 'approved' | 'rejected',
+        project: projectsMap[application.project_id] || {
+          title: 'Unknown Project',
+          description: '',
+          category: '',
+          stage: ''
+        }
+      } as ProjectApplication;
+    });
+    
   } catch (error: any) {
     console.error("Error fetching user applications:", error);
     toast.error(error.message || "Failed to fetch your applications");
