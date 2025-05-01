@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -68,13 +67,16 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
-    // Fetch all projects without any user filtering
+    // Fetch all projects without any filtering by creator_id
+    // This ensures all users can see all projects
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
       .order('created_at', { ascending: false });
       
     if (error) throw error;
+    
+    console.log("Projects fetched:", data?.length || 0);
     return data || [];
   } catch (error: any) {
     console.error("Error getting projects:", error);
