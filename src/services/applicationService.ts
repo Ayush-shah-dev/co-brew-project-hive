@@ -17,6 +17,12 @@ export type ProjectApplication = {
     last_name: string | null;
     avatar_url: string | null;
   };
+  project?: {
+    title: string;
+    description: string;
+    category: string;
+    stage: string;
+  };
 };
 
 export async function createApplication(applicationData: {
@@ -70,7 +76,13 @@ export async function getProjectApplications(projectId: string): Promise<Project
     // Fetch profiles for those applicants
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, avatar_url')
+      .select('id, avatar_url')
+      .in('id', applicantIds);
+
+    // Fetch additional profile details for those applicants  
+    const { data: profileDetailsData, error: profileDetailsError } = await supabase
+      .from('profile_details')
+      .select('id, first_name, last_name')
       .in('id', applicantIds);
       
     if (profilesError) {
@@ -78,11 +90,25 @@ export async function getProjectApplications(projectId: string): Promise<Project
       // Continue without profiles rather than failing completely
     }
     
+    if (profileDetailsError) {
+      console.error("Error fetching profile details:", profileDetailsError);
+      // Continue without profile details rather than failing completely
+    }
+    
     // Map profiles to a dictionary for quick lookup
     const profilesMap: Record<string, any> = {};
-    if (profilesData) {
-      profilesData.forEach(profile => {
-        profilesMap[profile.id] = profile;
+    if (profilesData && profileDetailsData) {
+      applicantIds.forEach(id => {
+        const profile = profilesData.find(p => p.id === id);
+        const profileDetails = profileDetailsData.find(p => p.id === id);
+        
+        if (profile || profileDetails) {
+          profilesMap[id] = {
+            avatar_url: profile?.avatar_url || null,
+            first_name: profileDetails?.first_name || null,
+            last_name: profileDetails?.last_name || null
+          };
+        }
       });
     }
     
@@ -110,7 +136,7 @@ export async function getUserApplications(): Promise<ProjectApplication[]> {
       .from('project_applications')
       .select(`
         *,
-        project:project_id (
+        project:startup_projects!project_id (
           title,
           description,
           category,
@@ -119,8 +145,19 @@ export async function getUserApplications(): Promise<ProjectApplication[]> {
       `)
       .eq('applicant_id', userData.user.id);
       
-    if (error) throw error;
-    return data || [];
+    if (error) {
+      console.error("Error in query:", error);
+      throw error;
+    }
+    
+    // Type cast to ensure compatibility with the ProjectApplication type
+    const typedData = data?.map(item => ({
+      ...item,
+      status: item.status as 'pending' | 'approved' | 'rejected',
+      project: item.project as ProjectApplication['project']
+    })) || [];
+    
+    return typedData;
   } catch (error: any) {
     console.error("Error fetching user applications:", error);
     toast.error(error.message || "Failed to fetch your applications");

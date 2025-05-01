@@ -8,10 +8,10 @@ export type ProjectIdea = {
   title: string;
   description: string | null;
   status: 'to_explore' | 'in_progress' | 'finalized';
+  votes: number | null;
   created_by: string;
-  votes: number;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
   creator?: {
     first_name: string | null;
     last_name: string | null;
@@ -21,65 +21,77 @@ export type ProjectIdea = {
 
 export async function getProjectIdeas(projectId: string): Promise<ProjectIdea[]> {
   try {
-    // First fetch all ideas for the project
-    const { data: ideasData, error: ideasError } = await supabase
+    const { data, error } = await supabase
       .from('project_ideas')
       .select('*')
       .eq('project_id', projectId)
-      .order('votes', { ascending: false });
-      
-    if (ideasError) throw ideasError;
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     
-    if (!ideasData || ideasData.length === 0) {
+    if (!data || data.length === 0) {
       return [];
     }
     
-    // Get all unique user IDs from the ideas
-    const userIds = Array.from(new Set(ideasData.map(idea => idea.created_by)));
+    // Get all unique creator IDs
+    const creatorIds = Array.from(new Set(data.map(idea => idea.created_by)));
     
-    // Fetch profiles for those users
+    // Fetch profiles for creators
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, avatar_url')
-      .in('id', userIds);
+      .select('id, avatar_url')
+      .in('id', creatorIds);
+      
+    // Fetch additional profile details
+    const { data: profileDetailsData, error: profileDetailsError } = await supabase
+      .from('profile_details')
+      .select('id, first_name, last_name')
+      .in('id', creatorIds);
       
     if (profilesError) {
       console.error("Error fetching profiles:", profilesError);
-      // Continue without profiles rather than failing completely
+    }
+
+    if (profileDetailsError) {
+      console.error("Error fetching profile details:", profileDetailsError);
     }
     
-    // Map profiles to a dictionary for quick lookup
+    // Map profile data
     const profilesMap: Record<string, any> = {};
-    if (profilesData) {
-      profilesData.forEach(profile => {
-        profilesMap[profile.id] = profile;
+    if (profilesData && profileDetailsData) {
+      creatorIds.forEach(id => {
+        const profile = profilesData.find(p => p.id === id);
+        const profileDetails = profileDetailsData.find(p => p.id === id);
+        
+        if (profile || profileDetails) {
+          profilesMap[id] = {
+            avatar_url: profile?.avatar_url || null,
+            first_name: profileDetails?.first_name || null,
+            last_name: profileDetails?.last_name || null
+          };
+        }
       });
     }
     
-    // Combine ideas with creator profiles
-    return ideasData.map(idea => {
-      const status = idea.status as 'to_explore' | 'in_progress' | 'finalized';
-      
-      return {
-        ...idea,
-        status,
-        creator: profilesMap[idea.created_by] || null
-      };
-    });
-    
+    // Map all ideas with their creator profiles
+    return data.map(idea => ({
+      ...idea,
+      status: idea.status as 'to_explore' | 'in_progress' | 'finalized',
+      creator: profilesMap[idea.created_by] || null
+    }));
   } catch (error: any) {
-    console.error(`Error getting ideas for project ${projectId}:`, error);
+    console.error("Error getting ideas:", error);
     toast.error(error.message || "Failed to fetch project ideas");
     return [];
   }
 }
 
-export async function createIdea(ideaData: {
-  project_id: string;
-  title: string;
+export async function createIdea(ideaData: { 
+  project_id: string; 
+  title: string; 
   description: string;
-  status: 'to_explore' | 'in_progress' | 'finalized';
-}) {
+  status?: string;
+}): Promise<ProjectIdea | null> {
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -88,80 +100,65 @@ export async function createIdea(ideaData: {
       .from('project_ideas')
       .insert({
         ...ideaData,
-        created_by: userData.user.id
+        created_by: userData.user.id,
+        votes: 0,
+        status: ideaData.status || 'to_explore'
       })
       .select()
       .single();
       
     if (error) throw error;
-    return data;
+    
+    toast.success("Idea created successfully");
+    return data as ProjectIdea;
   } catch (error: any) {
     console.error("Error creating idea:", error);
     toast.error(error.message || "Failed to create idea");
-    throw error;
+    return null;
   }
 }
 
-export async function updateIdeaStatus(ideaId: string, status: 'to_explore' | 'in_progress' | 'finalized') {
+export async function updateIdeaStatus(ideaId: string, status: 'to_explore' | 'in_progress' | 'finalized'): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('project_ideas')
       .update({ status })
-      .eq('id', ideaId)
-      .select()
-      .single();
+      .eq('id', ideaId);
       
     if (error) throw error;
-    return data;
+    
+    return true;
   } catch (error: any) {
-    console.error(`Error updating idea ${ideaId}:`, error);
+    console.error("Error updating idea status:", error);
     toast.error(error.message || "Failed to update idea status");
-    throw error;
+    return false;
   }
 }
 
-export async function voteForIdea(ideaId: string) {
+export async function voteForIdea(ideaId: string): Promise<boolean> {
   try {
-    // First get current votes
-    const { data: currentIdea, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('project_ideas')
       .select('votes')
       .eq('id', ideaId)
       .single();
       
-    if (fetchError) throw fetchError;
+    if (error) throw error;
     
-    // Increment votes
-    const newVotes = (currentIdea?.votes || 0) + 1;
+    const currentVotes = data.votes || 0;
+    const newVotes = currentVotes + 1;
     
-    const { data, error } = await supabase
+    const { error: updateError } = await supabase
       .from('project_ideas')
       .update({ votes: newVotes })
-      .eq('id', ideaId)
-      .select()
-      .single();
-      
-    if (error) throw error;
-    return data;
-  } catch (error: any) {
-    console.error(`Error voting for idea ${ideaId}:`, error);
-    toast.error(error.message || "Failed to vote for idea");
-    throw error;
-  }
-}
-
-export async function deleteIdea(ideaId: string) {
-  try {
-    const { error } = await supabase
-      .from('project_ideas')
-      .delete()
       .eq('id', ideaId);
       
-    if (error) throw error;
+    if (updateError) throw updateError;
+    
     return true;
   } catch (error: any) {
-    console.error(`Error deleting idea ${ideaId}:`, error);
-    toast.error(error.message || "Failed to delete idea");
-    throw error;
+    console.error("Error voting for idea:", error);
+    toast.error(error.message || "Failed to vote for idea");
+    return false;
   }
 }
