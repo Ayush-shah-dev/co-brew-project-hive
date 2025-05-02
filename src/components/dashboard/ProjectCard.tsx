@@ -88,7 +88,7 @@ const ProjectCard = ({
           <div className="mb-4">
             <div className="flex items-center text-sm mb-1">
               <Briefcase size={14} className="mr-1" />
-              <span className="font-medium">Roles needed:</span>
+              <span className="font-medium">Open Roles:</span>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {roles_needed.map((role, index) => (

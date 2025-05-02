@@ -67,10 +67,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
         motivation: ""
       });
       
+      toast.success("Application submitted successfully!");
+      
       // Close the sheet
       setOpen(false);
     } catch (error) {
       console.error("Failed to submit application:", error);
+      toast.error("Failed to submit application. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +82,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button className="bg-cobrew-600 hover:bg-cobrew-700">Apply to Join</Button>
+        <Button className="bg-cobrew-600 hover:bg-cobrew-700 w-full">Apply to Join Project</Button>
       </SheetTrigger>
       <SheetContent className="w-full md:max-w-md overflow-y-auto">
         <SheetHeader>
