@@ -1,4 +1,3 @@
-
 import { Calendar, ArrowRight, Users, Tag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -55,6 +54,9 @@ const ProjectCard = ({
   const statusColor = getStatusColor(status);
   const isCreator = user?.id === creator_id;
 
+  // If roles_needed is empty or undefined, but tags exist on the project, use tags as roles
+  // This is a temporary solution until the database is updated with a roles_needed column
+  
   const formattedDate = dueDate ? 
     new Date(dueDate).toLocaleDateString("en-US", {
       month: "short",
@@ -88,7 +90,7 @@ const ProjectCard = ({
           <div className="mb-4">
             <div className="flex items-center text-sm mb-1">
               <Briefcase size={14} className="mr-1" />
-              <span className="font-medium">Open Roles:</span>
+              <span className="font-medium">Hiring for:</span>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {roles_needed.map((role, index) => (

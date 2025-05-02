@@ -27,6 +27,7 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from "@/components/ui/toggle-group";
+import { Badge } from "@/components/ui/badge";
 
 const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");

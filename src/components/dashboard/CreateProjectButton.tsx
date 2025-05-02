@@ -66,10 +66,9 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
   const [fundingGoal, setFundingGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // Updated role handling
+  // Role handling
   const [rolesNeeded, setRolesNeeded] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>("");
-  const [customRole, setCustomRole] = useState<string>("");
+  const [currentRole, setCurrentRole] = useState<string>("");
   
   const navigate = useNavigate();
 
@@ -99,8 +98,7 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
       setCategory("SaaS");
       setFundingGoal("");
       setRolesNeeded([]);
-      setSelectedRole("");
-      setCustomRole("");
+      setCurrentRole("");
       
       // Navigate to the new project
       navigate(`/project/${newProject.id}/overview`);
@@ -112,17 +110,16 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
     }
   };
 
-  const addSelectedRole = () => {
-    if (selectedRole && !rolesNeeded.includes(selectedRole)) {
-      setRolesNeeded([...rolesNeeded, selectedRole]);
-      setSelectedRole("");
+  const handleAddRole = () => {
+    if (currentRole.trim() && !rolesNeeded.includes(currentRole.trim())) {
+      setRolesNeeded([...rolesNeeded, currentRole.trim()]);
+      setCurrentRole("");
     }
   };
 
-  const addCustomRole = () => {
-    if (customRole.trim() && !rolesNeeded.includes(customRole.trim())) {
-      setRolesNeeded([...rolesNeeded, customRole.trim()]);
-      setCustomRole("");
+  const selectPredefinedRole = (role: string) => {
+    if (!rolesNeeded.includes(role)) {
+      setRolesNeeded([...rolesNeeded, role]);
     }
   };
 
@@ -130,10 +127,10 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
     setRolesNeeded(rolesNeeded.filter(role => role !== roleToRemove));
   };
 
-  const handleCustomRoleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && customRole.trim()) {
+  const handleRoleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && currentRole.trim()) {
       e.preventDefault();
-      addCustomRole();
+      handleAddRole();
     }
   };
 
@@ -215,57 +212,56 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
           <div className="space-y-2">
             <Label>Roles Needed</Label>
             
-            {/* Predefined role selection */}
-            <div className="flex gap-2 mb-2">
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select predefined roles" />
-                </SelectTrigger>
-                <SelectContent>
-                  {predefinedRoleOptions.map(role => (
-                    <SelectItem key={role} value={role}>{role}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                type="button" 
-                onClick={addSelectedRole} 
-                variant="outline"
-                disabled={!selectedRole}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Custom role input */}
+            {/* Single role input with add button */}
             <div className="flex gap-2">
               <Input
-                placeholder="Type custom role (e.g., DevOps Engineer)"
-                value={customRole}
-                onChange={(e) => setCustomRole(e.target.value)}
-                onKeyDown={handleCustomRoleKeyDown}
+                placeholder="Type role (e.g., UI Designer, Backend Developer)"
+                value={currentRole}
+                onChange={(e) => setCurrentRole(e.target.value)}
+                onKeyDown={handleRoleKeyDown}
                 className="flex-1"
               />
               <Button 
                 type="button" 
-                onClick={addCustomRole} 
+                onClick={handleAddRole} 
                 variant="outline"
-                disabled={!customRole.trim()}
+                disabled={!currentRole.trim()}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             
-            {rolesNeeded.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {rolesNeeded.map(role => (
-                  <Badge key={role} variant="secondary" className="flex items-center gap-1">
-                    {role}
-                    <button type="button" onClick={() => removeRole(role)} className="ml-1 rounded-full">
-                      <X className="h-3 w-3" />
-                    </button>
+            {/* Predefined role suggestions */}
+            <div className="mt-2">
+              <Label className="text-sm text-muted-foreground mb-1 block">Quick Add:</Label>
+              <div className="flex flex-wrap gap-2">
+                {predefinedRoleOptions.map(role => (
+                  <Badge 
+                    key={role}
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-secondary"
+                    onClick={() => selectPredefinedRole(role)}
+                  >
+                    {role} <Plus className="h-3 w-3 ml-1" />
                   </Badge>
                 ))}
+              </div>
+            </div>
+            
+            {/* Display selected roles */}
+            {rolesNeeded.length > 0 && (
+              <div>
+                <Label className="text-sm mb-1 block">Selected Roles:</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {rolesNeeded.map(role => (
+                    <Badge key={role} variant="secondary" className="flex items-center gap-1">
+                      {role}
+                      <button type="button" onClick={() => removeRole(role)} className="ml-1 rounded-full">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
           </div>
