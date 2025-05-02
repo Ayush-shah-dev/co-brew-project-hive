@@ -22,10 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createProject, ProjectStage, ProjectCategory } from "@/services/projectService";
+import { Badge } from "@/components/ui/badge";
 
 const stageOptions: {value: ProjectStage; label: string}[] = [
   { value: "idea", label: "Idea" },
@@ -44,6 +45,18 @@ const categoryOptions: {value: ProjectCategory; label: string}[] = [
   { value: "Other", label: "Other" }
 ];
 
+const roleOptions = [
+  "Developer",
+  "Designer",
+  "Product Manager",
+  "Marketing",
+  "Sales",
+  "Finance",
+  "Legal",
+  "Operations",
+  "Other"
+];
+
 const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "outline" }) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -52,6 +65,11 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
   const [category, setCategory] = useState<ProjectCategory>("SaaS");
   const [fundingGoal, setFundingGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // New state for roles needed
+  const [rolesNeeded, setRolesNeeded] = useState<string[]>([]);
+  const [currentRole, setCurrentRole] = useState<string>("");
+  
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +84,8 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
         stage,
         category,
         funding_goal: fundingGoal ? parseFloat(fundingGoal) : 0,
-        tags: []
+        tags: [],
+        roles_needed: rolesNeeded
       });
       
       toast.success("Project created successfully!");
@@ -78,6 +97,7 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
       setStage("idea");
       setCategory("SaaS");
       setFundingGoal("");
+      setRolesNeeded([]);
       
       // Navigate to the new project
       navigate(`/project/${newProject.id}/overview`);
@@ -85,6 +105,24 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
       console.error("Project creation error:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const addRole = () => {
+    if (currentRole && !rolesNeeded.includes(currentRole)) {
+      setRolesNeeded([...rolesNeeded, currentRole]);
+      setCurrentRole("");
+    }
+  };
+
+  const removeRole = (roleToRemove: string) => {
+    setRolesNeeded(rolesNeeded.filter(role => role !== roleToRemove));
+  };
+
+  const handleRoleKeyDown = (e: React.KeyboardEvent<HTMLSelectElement>) => {
+    if (e.key === 'Enter' && currentRole) {
+      e.preventDefault();
+      addRole();
     }
   };
 
@@ -98,7 +136,7 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
           <PlusCircle className="mr-2 h-4 w-4" /> New Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create new startup project</DialogTitle>
           <DialogDescription>
@@ -161,6 +199,43 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
               rows={4}
               required
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="roles">Roles Needed</Label>
+            <div className="flex gap-2">
+              <Select value={currentRole} onValueChange={setCurrentRole}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select roles you need" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roleOptions.map(role => (
+                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                type="button" 
+                onClick={addRole} 
+                variant="outline"
+                disabled={!currentRole}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {rolesNeeded.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {rolesNeeded.map(role => (
+                  <Badge key={role} variant="secondary" className="flex items-center gap-1">
+                    {role}
+                    <button type="button" onClick={() => removeRole(role)} className="ml-1 rounded-full">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">

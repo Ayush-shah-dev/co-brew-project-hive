@@ -188,6 +188,8 @@ const Projects = () => {
                         progress={50} // This would be calculated based on tasks/milestones
                         teamSize={3} // This would come from project members count
                         dueDate="2024-06-30" // This would be a new field to add
+                        roles_needed={project.roles_needed}
+                        creator_id={project.creator_id}
                       />
                     ))}
                     {filteredProjects.length === 0 && (
@@ -212,6 +214,8 @@ const Projects = () => {
                         progress={50}
                         teamSize={3}
                         dueDate="2024-06-30"
+                        roles_needed={project.roles_needed}
+                        creator_id={project.creator_id}
                       />
                     ))}
                     {activeProjects.length === 0 && (
@@ -236,6 +240,8 @@ const Projects = () => {
                         progress={20}
                         teamSize={2}
                         dueDate="2024-08-30"
+                        roles_needed={project.roles_needed}
+                        creator_id={project.creator_id}
                       />
                     ))}
                     {ideaProjects.length === 0 && (

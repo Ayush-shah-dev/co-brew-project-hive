@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -8,6 +9,7 @@ export type StartupProject = {
   stage: string;
   category: string;
   tags: string[];
+  roles_needed?: string[];
   funding_goal: number;
   pitch_deck_url?: string;
   creator_id: string;

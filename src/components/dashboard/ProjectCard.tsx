@@ -1,10 +1,12 @@
 
-import { Calendar, ArrowRight, Users, Tag } from "lucide-react";
+import { Calendar, ArrowRight, Users, Tag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
+import ApplyProjectForm from "@/components/projects/ApplyProjectForm";
+import { useAuth } from "@/hooks/useAuth";
 
 export type ProjectStatus = "idea" | "mvp" | "growth" | "scaling";
 
@@ -17,6 +19,8 @@ export interface ProjectCardProps {
   category: string;
   teamSize: number;
   dueDate?: string;
+  roles_needed?: string[];
+  creator_id?: string;
 }
 
 const getStatusColor = (status: ProjectStatus) => {
@@ -43,9 +47,13 @@ const ProjectCard = ({
   category,
   teamSize,
   dueDate,
+  roles_needed = [],
+  creator_id,
 }: ProjectCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const statusColor = getStatusColor(status);
+  const isCreator = user?.id === creator_id;
 
   const formattedDate = dueDate ? 
     new Date(dueDate).toLocaleDateString("en-US", {
@@ -64,7 +72,7 @@ const ProjectCard = ({
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-semibold text-lg line-clamp-1 mb-1">{title}</h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Badge className={statusColor}>{status}</Badge>
               <Badge variant="outline">{category}</Badge>
             </div>
@@ -75,6 +83,23 @@ const ProjectCard = ({
         <p className="text-muted-foreground text-sm line-clamp-2 mb-4 h-10">
           {description}
         </p>
+        
+        {roles_needed && roles_needed.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center text-sm mb-1">
+              <Briefcase size={14} className="mr-1" />
+              <span className="font-medium">Roles needed:</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {roles_needed.map((role, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {role}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div className="space-y-4">
           <div>
             <div className="flex justify-between text-sm mb-1">
@@ -97,7 +122,7 @@ const ProjectCard = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 flex flex-col gap-2">
         <Button 
           onClick={handleClick} 
           variant="ghost" 
@@ -106,6 +131,13 @@ const ProjectCard = ({
           <span>View project</span>
           <ArrowRight size={16} />
         </Button>
+        
+        {roles_needed && roles_needed.length > 0 && !isCreator && user && (
+          <ApplyProjectForm 
+            projectId={id} 
+            projectTitle={title} 
+          />
+        )}
       </CardFooter>
     </Card>
   );
