@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -33,6 +32,7 @@ const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [stageFilter, setStageFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   const { data: projects = [], isLoading, error } = useQuery({
@@ -42,6 +42,13 @@ const Projects = () => {
   
   const projectCategories = ["SaaS", "AI", "Marketplace", "FinTech", "EdTech", "HealthTech", "Other"];
   const projectStages = ["idea", "mvp", "growth", "scaling"];
+  
+  // Extract all unique roles from all projects
+  const allRoles = Array.from(
+    new Set(
+      projects.flatMap((project: StartupProject) => project.roles_needed || [])
+    )
+  ).filter(Boolean);
   
   // Apply all filters
   const filteredProjects = projects.filter((project: StartupProject) => {
@@ -53,7 +60,15 @@ const Projects = () => {
     const matchesCategory = categoryFilter === "all" || project.category === categoryFilter;
     const matchesStage = stageFilter === "all" || project.stage === stageFilter;
     
-    return matchesSearch && matchesCategory && matchesStage;
+    // New role filter
+    const matchesRole = 
+      !roleFilter || 
+      (project.roles_needed && 
+       project.roles_needed.some(role => 
+         role.toLowerCase().includes(roleFilter.toLowerCase())
+       ));
+    
+    return matchesSearch && matchesCategory && matchesStage && matchesRole;
   });
   
   // Filter projects by stage for the tabs
@@ -136,6 +151,34 @@ const Projects = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Role</label>
+                        <Input 
+                          placeholder="Search by role..."
+                          value={roleFilter}
+                          onChange={(e) => setRoleFilter(e.target.value)}
+                        />
+                        {allRoles.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {allRoles.slice(0, 6).map((role) => (
+                              <Badge 
+                                key={role} 
+                                variant="outline" 
+                                className="cursor-pointer text-xs"
+                                onClick={() => setRoleFilter(role)}
+                              >
+                                {role}
+                              </Badge>
+                            ))}
+                            {allRoles.length > 6 && (
+                              <span className="text-xs text-muted-foreground mt-1">
+                                +{allRoles.length - 6} more
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </DropdownMenuContent>

@@ -45,7 +45,7 @@ const categoryOptions: {value: ProjectCategory; label: string}[] = [
   { value: "Other", label: "Other" }
 ];
 
-const roleOptions = [
+const predefinedRoleOptions = [
   "Developer",
   "Designer",
   "Product Manager",
@@ -66,9 +66,10 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
   const [fundingGoal, setFundingGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // New state for roles needed
+  // Updated role handling
   const [rolesNeeded, setRolesNeeded] = useState<string[]>([]);
-  const [currentRole, setCurrentRole] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [customRole, setCustomRole] = useState<string>("");
   
   const navigate = useNavigate();
 
@@ -98,20 +99,30 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
       setCategory("SaaS");
       setFundingGoal("");
       setRolesNeeded([]);
+      setSelectedRole("");
+      setCustomRole("");
       
       // Navigate to the new project
       navigate(`/project/${newProject.id}/overview`);
     } catch (error) {
       console.error("Project creation error:", error);
+      toast.error("Failed to create project");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const addRole = () => {
-    if (currentRole && !rolesNeeded.includes(currentRole)) {
-      setRolesNeeded([...rolesNeeded, currentRole]);
-      setCurrentRole("");
+  const addSelectedRole = () => {
+    if (selectedRole && !rolesNeeded.includes(selectedRole)) {
+      setRolesNeeded([...rolesNeeded, selectedRole]);
+      setSelectedRole("");
+    }
+  };
+
+  const addCustomRole = () => {
+    if (customRole.trim() && !rolesNeeded.includes(customRole.trim())) {
+      setRolesNeeded([...rolesNeeded, customRole.trim()]);
+      setCustomRole("");
     }
   };
 
@@ -119,10 +130,10 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
     setRolesNeeded(rolesNeeded.filter(role => role !== roleToRemove));
   };
 
-  const handleRoleKeyDown = (e: React.KeyboardEvent<HTMLSelectElement>) => {
-    if (e.key === 'Enter' && currentRole) {
+  const handleCustomRoleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && customRole.trim()) {
       e.preventDefault();
-      addRole();
+      addCustomRole();
     }
   };
 
@@ -202,23 +213,44 @@ const CreateProjectButton = ({ variant = "default" }: { variant?: "default" | "o
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="roles">Roles Needed</Label>
-            <div className="flex gap-2">
-              <Select value={currentRole} onValueChange={setCurrentRole}>
+            <Label>Roles Needed</Label>
+            
+            {/* Predefined role selection */}
+            <div className="flex gap-2 mb-2">
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select roles you need" />
+                  <SelectValue placeholder="Select predefined roles" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roleOptions.map(role => (
+                  {predefinedRoleOptions.map(role => (
                     <SelectItem key={role} value={role}>{role}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Button 
                 type="button" 
-                onClick={addRole} 
+                onClick={addSelectedRole} 
                 variant="outline"
-                disabled={!currentRole}
+                disabled={!selectedRole}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Custom role input */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Type custom role (e.g., DevOps Engineer)"
+                value={customRole}
+                onChange={(e) => setCustomRole(e.target.value)}
+                onKeyDown={handleCustomRoleKeyDown}
+                className="flex-1"
+              />
+              <Button 
+                type="button" 
+                onClick={addCustomRole} 
+                variant="outline"
+                disabled={!customRole.trim()}
               >
                 <Plus className="h-4 w-4" />
               </Button>
