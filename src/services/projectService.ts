@@ -68,16 +68,19 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
-    // Fetch all projects without any filtering by creator_id
-    // This ensures all users can see all projects
+    // Fetch projects directly without any joins or filters
+    // This makes sure we're not relying on any relationships that might be causing issues
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
       .order('created_at', { ascending: false });
       
-    if (error) throw error;
+    if (error) {
+      console.error("Database error fetching projects:", error);
+      throw error;
+    }
     
-    console.log("Projects fetched:", data?.length || 0);
+    console.log("Projects fetched:", data?.length || 0, data);
     return data || [];
   } catch (error: any) {
     console.error("Error getting projects:", error);
