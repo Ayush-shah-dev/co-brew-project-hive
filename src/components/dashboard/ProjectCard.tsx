@@ -1,3 +1,4 @@
+
 import { Calendar, ArrowRight, Users, Tag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -53,9 +54,6 @@ const ProjectCard = ({
   const { user } = useAuth();
   const statusColor = getStatusColor(status);
   const isCreator = user?.id === creator_id;
-
-  // If roles_needed is empty or undefined, but tags exist on the project, use tags as roles
-  // This is a temporary solution until the database is updated with a roles_needed column
   
   const formattedDate = dueDate ? 
     new Date(dueDate).toLocaleDateString("en-US", {

@@ -324,6 +324,7 @@ export type Database = {
           funding_goal: number | null
           id: string
           pitch_deck_url: string | null
+          roles_needed: string[] | null
           stage: string
           tags: string[] | null
           title: string
@@ -337,6 +338,7 @@ export type Database = {
           funding_goal?: number | null
           id?: string
           pitch_deck_url?: string | null
+          roles_needed?: string[] | null
           stage: string
           tags?: string[] | null
           title: string
@@ -350,6 +352,7 @@ export type Database = {
           funding_goal?: number | null
           id?: string
           pitch_deck_url?: string | null
+          roles_needed?: string[] | null
           stage?: string
           tags?: string[] | null
           title?: string

@@ -8,7 +8,7 @@ export type StartupProject = {
   stage: string;
   category: string;
   tags: string[];
-  roles_needed?: string[];
+  roles_needed: string[];
   funding_goal: number;
   pitch_deck_url?: string;
   creator_id: string;
@@ -38,31 +38,16 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     
-    // Create a new object without the roles_needed property to avoid database error
-    const { roles_needed, ...projectDataWithoutRoles } = projectData;
-    
-    // First insert the project without roles_needed
     const { data, error } = await supabase
       .from('startup_projects')
       .insert({
-        ...projectDataWithoutRoles,
+        ...projectData,
         creator_id: userData.user.id
       })
       .select()
       .single();
       
     if (error) throw error;
-    
-    // If roles_needed exists, update the project with the roles as tags
-    // Since the roles_needed column doesn't exist yet, we'll use the tags column temporarily
-    if (roles_needed && roles_needed.length > 0) {
-      const { error: updateError } = await supabase
-        .from('startup_projects')
-        .update({ tags: roles_needed })
-        .eq('id', data.id);
-        
-      if (updateError) console.error("Could not update roles:", updateError);
-    }
     
     // Add creator as admin member
     await supabase
