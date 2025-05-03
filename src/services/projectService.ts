@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -143,25 +144,47 @@ export async function deleteProject(id: string) {
 // Project members operations
 export async function getProjectMembers(projectId: string) {
   try {
-    const { data, error } = await supabase
+    console.log("Fetching members for project:", projectId);
+    
+    // Get project members without using the nested relationship
+    const { data: membersData, error: membersError } = await supabase
       .from('project_members')
-      .select(`
-        *,
-        profiles:user_id (
-          first_name,
-          last_name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('project_id', projectId);
       
-    if (error) throw error;
+    if (membersError) {
+      console.error("Error fetching members:", membersError);
+      throw membersError;
+    }
     
-    // Format the data to match ProjectMember type
-    return (data || []).map(item => ({
-      ...item,
-      user: item.profiles
-    }));
+    // Now fetch user profiles separately for each member
+    const members = await Promise.all(
+      (membersData || []).map(async (member) => {
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, avatar_url')
+            .eq('id', member.user_id)
+            .single();
+            
+          if (userError) {
+            console.warn(`Could not fetch user data for member ${member.id}:`, userError);
+            return member; // Return member without user data
+          }
+          
+          return {
+            ...member,
+            user: userData
+          };
+        } catch (error) {
+          console.warn(`Error processing member ${member.id}:`, error);
+          return member; // Return member without user data
+        }
+      })
+    );
+    
+    console.log("Project members fetched:", members.length, members);
+    return members;
   } catch (error: any) {
     console.error(`Error getting members for project ${projectId}:`, error);
     toast.error(error.message || "Failed to fetch project members");
