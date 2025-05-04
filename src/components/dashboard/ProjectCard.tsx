@@ -1,3 +1,4 @@
+
 import { Calendar, ArrowRight, Users, Tag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -66,20 +67,20 @@ const ProjectCard = ({
   };
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-cobrew-500/10 border-white/10 backdrop-blur-sm bg-white/5 text-white">
-      <div className="h-2 bg-gradient-to-r from-cobrew-500 to-purple-600"></div>
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 border-white/5 backdrop-blur-lg bg-card/80 text-white h-full flex flex-col">
+      <div className="h-1.5 bg-gradient-to-r from-primary to-accent"></div>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="w-full">
             <h3 className="font-semibold text-lg line-clamp-1 mb-2">{title}</h3>
             <div className="flex gap-2 flex-wrap">
               <Badge className={`${statusColor} border`}>{status}</Badge>
-              <Badge variant="outline" className="border-white/20 bg-white/10">{category}</Badge>
+              <Badge variant="outline" className="border-white/20 bg-white/5">{category}</Badge>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pb-4">
+      <CardContent className="pb-4 flex-grow">
         <p className="text-gray-300 text-sm line-clamp-2 mb-4 h-10">
           {description}
         </p>
@@ -100,7 +101,7 @@ const ProjectCard = ({
           </div>
         )}
         
-        <div className="space-y-4">
+        <div className="space-y-4 mt-auto">
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-300">Progress</span>
@@ -109,7 +110,7 @@ const ProjectCard = ({
             <Progress 
               value={progress} 
               className="h-1.5 bg-white/10" 
-              indicatorClassName="bg-gradient-to-r from-cobrew-500 to-purple-600" 
+              indicatorClassName="bg-gradient-to-r from-primary to-accent" 
             />
           </div>
           <div className="flex justify-between text-sm text-gray-300">
@@ -126,7 +127,7 @@ const ProjectCard = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-2 border-t border-white/10 flex flex-col gap-2">
+      <CardFooter className="pt-2 border-t border-white/5 flex flex-col gap-2">
         <Button 
           onClick={handleClick} 
           variant="ghost" 

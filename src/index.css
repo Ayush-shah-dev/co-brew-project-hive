@@ -5,44 +5,44 @@
 
 @layer base {
   :root {
-    --background: 220 30% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 223 47% 11%;
+    --foreground: 220 13% 91%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 224 45% 14%;
+    --card-foreground: 220 13% 91%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 224 45% 14%;
+    --popover-foreground: 220 13% 91%;
 
-    --primary: 240 60% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 252 75% 63%;
+    --primary-foreground: 220 13% 91%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 222 24% 19%;
+    --secondary-foreground: 220 13% 91%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 224 25% 25%;
+    --muted-foreground: 220 10% 70%;
 
-    --accent: 262 80% 60%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 250 85% 65%;
+    --accent-foreground: 220 13% 91%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 220 13% 91%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 240 60% 60%;
+    --border: 225 25% 20%;
+    --input: 225 25% 20%;
+    --ring: 252 75% 63%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 240 60% 98%;
-    --sidebar-foreground: 240 20% 30%;
-    --sidebar-primary: 240 60% 60%;
+    --sidebar-background: 224 45% 12%;
+    --sidebar-foreground: 220 13% 91%;
+    --sidebar-primary: 252 75% 63%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 10% 95%;
-    --sidebar-accent-foreground: 240 20% 30%;
-    --sidebar-border: 240 20% 90%;
-    --sidebar-ring: 240 60% 60%;
+    --sidebar-accent: 225 25% 20%;
+    --sidebar-accent-foreground: 220 13% 91%;
+    --sidebar-border: 225 25% 25%;
+    --sidebar-ring: 252 75% 63%;
   }
 
   .dark {
@@ -94,7 +94,7 @@
   }
 
   .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl;
+    @apply bg-card/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl;
   }
 }
 

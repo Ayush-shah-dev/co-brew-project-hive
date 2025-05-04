@@ -82,27 +82,27 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button className="bg-cobrew-600 hover:bg-cobrew-700 w-full">Apply to Join Project</Button>
+        <Button className="bg-primary hover:bg-primary/80 w-full">Apply to Join Project</Button>
       </SheetTrigger>
-      <SheetContent className="w-full md:max-w-md overflow-y-auto">
+      <SheetContent className="w-full md:max-w-md overflow-y-auto bg-card border-white/10">
         <SheetHeader>
-          <SheetTitle>Apply to {projectTitle}</SheetTitle>
-          <SheetDescription>
+          <SheetTitle className="text-xl text-white">Apply to {projectTitle}</SheetTitle>
+          <SheetDescription className="text-muted-foreground">
             Tell the project creator why you're interested and how you can contribute to this project.
           </SheetDescription>
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 py-6">
           <div className="space-y-2">
-            <Label htmlFor="introduction">
-              Introduce yourself briefly
-              <span className="text-red-500"> *</span>
+            <Label htmlFor="introduction" className="text-white">
+              Briefly introduce yourself
+              <span className="text-destructive"> *</span>
             </Label>
             <Textarea
               id="introduction"
               name="introduction"
               placeholder="Hi! I'm a developer with a passion for..."
-              className="min-h-[80px]"
+              className="min-h-[80px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
               value={formData.introduction}
               onChange={handleInputChange}
               required
@@ -110,15 +110,15 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="experience">
+            <Label htmlFor="experience" className="text-white">
               What relevant experience do you have?
-              <span className="text-red-500"> *</span>
+              <span className="text-destructive"> *</span>
             </Label>
             <Textarea
               id="experience"
               name="experience"
               placeholder="I've worked on several projects involving..."
-              className="min-h-[100px]"
+              className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
               value={formData.experience}
               onChange={handleInputChange}
               required
@@ -126,15 +126,15 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="motivation">
+            <Label htmlFor="motivation" className="text-white">
               Why are you interested in this specific project?
-              <span className="text-red-500"> *</span>
+              <span className="text-destructive"> *</span>
             </Label>
             <Textarea
               id="motivation"
               name="motivation"
               placeholder="I'm excited about this project because..."
-              className="min-h-[100px]"
+              className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
               value={formData.motivation}
               onChange={handleInputChange}
               required
@@ -144,7 +144,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
           <SheetFooter className="pt-4">
             <Button 
               type="submit" 
-              className="w-full bg-cobrew-600 hover:bg-cobrew-700"
+              className="w-full bg-primary hover:bg-primary/80"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Submitting..." : "Submit Application"}
