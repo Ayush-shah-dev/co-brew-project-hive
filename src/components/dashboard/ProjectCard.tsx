@@ -1,4 +1,3 @@
-
 import { Calendar, ArrowRight, Users, Tag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -107,7 +106,11 @@ const ProjectCard = ({
               <span className="text-gray-300">Progress</span>
               <span className="font-medium text-white">{progress}%</span>
             </div>
-            <Progress value={progress} className="h-1.5 bg-white/10" indicatorClassName="bg-gradient-to-r from-cobrew-500 to-purple-600" />
+            <Progress 
+              value={progress} 
+              className="h-1.5 bg-white/10" 
+              indicatorClassName="bg-gradient-to-r from-cobrew-500 to-purple-600" 
+            />
           </div>
           <div className="flex justify-between text-sm text-gray-300">
             {formattedDate && (

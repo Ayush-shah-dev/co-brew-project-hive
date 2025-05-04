@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -118,7 +117,7 @@ const Dashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <CreateProjectButton variant="ghost" />
+                  <CreateProjectButton variant="outline" />
                 </CardFooter>
               </Card>
             </div>
