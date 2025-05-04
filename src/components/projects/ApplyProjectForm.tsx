@@ -47,7 +47,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
     
     // Basic validation
     if (!formData.introduction.trim() || !formData.experience.trim() || !formData.motivation.trim()) {
-      toast.error("Please fill in all fields");
+      toast.error("Please answer all questions");
       return;
     }
     
@@ -68,6 +68,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
       });
       
       toast.success("Application submitted successfully!");
+      toast.info("The project owner will review your application");
       
       // Close the sheet
       setOpen(false);
@@ -88,14 +89,14 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
         <SheetHeader>
           <SheetTitle className="text-xl text-white">Apply to {projectTitle}</SheetTitle>
           <SheetDescription className="text-muted-foreground">
-            Tell the project creator why you're interested and how you can contribute to this project.
+            Answer these questions to apply. The project owner will review your application.
           </SheetDescription>
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 py-6">
           <div className="space-y-2">
             <Label htmlFor="introduction" className="text-white">
-              Briefly introduce yourself
+              Question 1: Briefly introduce yourself
               <span className="text-destructive"> *</span>
             </Label>
             <Textarea
@@ -111,7 +112,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
           
           <div className="space-y-2">
             <Label htmlFor="experience" className="text-white">
-              What relevant experience do you have?
+              Question 2: What relevant experience do you have?
               <span className="text-destructive"> *</span>
             </Label>
             <Textarea
@@ -127,7 +128,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
           
           <div className="space-y-2">
             <Label htmlFor="motivation" className="text-white">
-              Why are you interested in this specific project?
+              Question 3: Why are you interested in this specific project?
               <span className="text-destructive"> *</span>
             </Label>
             <Textarea

@@ -5,22 +5,22 @@
 
 @layer base {
   :root {
-    --background: 223 47% 11%;
+    --background: 224 47% 8%;
     --foreground: 220 13% 91%;
 
-    --card: 224 45% 14%;
+    --card: 225 45% 12%;
     --card-foreground: 220 13% 91%;
 
-    --popover: 224 45% 14%;
+    --popover: 225 45% 12%;
     --popover-foreground: 220 13% 91%;
 
     --primary: 252 75% 63%;
     --primary-foreground: 220 13% 91%;
 
-    --secondary: 222 24% 19%;
+    --secondary: 222 24% 15%;
     --secondary-foreground: 220 13% 91%;
 
-    --muted: 224 25% 25%;
+    --muted: 224 25% 20%;
     --muted-foreground: 220 10% 70%;
 
     --accent: 250 85% 65%;
@@ -29,17 +29,17 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 220 13% 91%;
 
-    --border: 225 25% 20%;
-    --input: 225 25% 20%;
+    --border: 225 25% 18%;
+    --input: 225 25% 18%;
     --ring: 252 75% 63%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 224 45% 12%;
+    --sidebar-background: 225 45% 10%;
     --sidebar-foreground: 220 13% 91%;
     --sidebar-primary: 252 75% 63%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 225 25% 20%;
+    --sidebar-accent: 225 25% 18%;
     --sidebar-accent-foreground: 220 13% 91%;
     --sidebar-border: 225 25% 25%;
     --sidebar-ring: 252 75% 63%;
@@ -74,11 +74,11 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 240 60% 60%;
 
-    --sidebar-background: 240 20% 12%;
+    --sidebar-background: 240 20% 10%;
     --sidebar-foreground: 240 10% 90%;
     --sidebar-primary: 240 60% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 20% 18%;
+    --sidebar-accent: 240 20% 16%;
     --sidebar-accent-foreground: 240 10% 90%;
     --sidebar-border: 240 20% 18%;
     --sidebar-ring: 240 60% 60%;
@@ -108,7 +108,7 @@
   }
   
   .animated-gradient-text {
-    @apply bg-gradient-to-r from-cobrew-500 to-cobrew-700 text-transparent bg-clip-text;
+    @apply bg-gradient-to-r from-primary to-accent text-transparent bg-clip-text;
     animation: gradient 8s ease infinite;
     background-size: 200% 200%;
   }
@@ -131,5 +131,13 @@
 
   .kanban-card {
     @apply bg-card shadow-sm rounded-lg p-4 mb-3 border border-border/50 cursor-pointer hover:shadow-md transition-all duration-200;
+  }
+  
+  .project-card-progress {
+    @apply h-1.5 bg-white/10;
+  }
+  
+  .project-card-progress-indicator {
+    @apply bg-gradient-to-r from-primary to-accent;
   }
 }

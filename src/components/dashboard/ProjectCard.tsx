@@ -3,7 +3,6 @@ import { Calendar, ArrowRight, Users, Tag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import ApplyProjectForm from "@/components/projects/ApplyProjectForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -107,11 +106,12 @@ const ProjectCard = ({
               <span className="text-gray-300">Progress</span>
               <span className="font-medium text-white">{progress}%</span>
             </div>
-            <Progress 
-              value={progress} 
-              className="h-1.5 bg-white/10" 
-              indicatorClassName="bg-gradient-to-r from-primary to-accent" 
-            />
+            <div className="project-card-progress w-full rounded-full overflow-hidden">
+              <div 
+                className="project-card-progress-indicator h-full" 
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
           </div>
           <div className="flex justify-between text-sm text-gray-300">
             {formattedDate && (
