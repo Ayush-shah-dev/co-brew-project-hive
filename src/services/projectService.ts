@@ -69,8 +69,9 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
-    // Fetch projects directly without any joins or filters
-    // This makes sure we're not relying on any relationships that might be causing issues
+    console.log("Fetching all projects with RLS policies applied");
+    
+    // Use a simple query with no filters - RLS policies will apply automatically
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
