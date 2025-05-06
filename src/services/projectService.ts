@@ -58,7 +58,8 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
         user_id: userData.user.id,
         role: 'admin'
       });
-      
+    
+    toast.success("Project created successfully!");
     return data;
   } catch (error: any) {
     console.error("Error creating project:", error);
@@ -69,9 +70,11 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
-    console.log("Fetching all projects with RLS policies applied");
+    // Get current user
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
     
-    // Use a simple query with no filters - RLS policies will apply automatically
+    // Fetch all active projects (not deleted)
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
@@ -82,11 +85,35 @@ export async function getProjects() {
       throw error;
     }
     
-    console.log("Projects fetched:", data?.length || 0, data);
-    return data || [];
+    // Filter out any projects marked as deleted (if we implement soft delete in the future)
+    const activeProjects = data || [];
+    console.log("Active projects fetched:", activeProjects.length);
+    
+    return activeProjects;
   } catch (error: any) {
     console.error("Error getting projects:", error);
     toast.error(error.message || "Failed to fetch projects");
+    return [];
+  }
+}
+
+export async function getMyProjects() {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return [];
+    
+    // Fetch projects where the current user is the creator
+    const { data, error } = await supabase
+      .from('startup_projects')
+      .select('*')
+      .eq('creator_id', userData.user.id)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error("Error getting my projects:", error);
+    toast.error(error.message || "Failed to fetch your projects");
     return [];
   }
 }
@@ -136,6 +163,7 @@ export async function updateProject(id: string, projectData: Partial<StartupProj
       .single();
       
     if (error) throw error;
+    toast.success("Project updated successfully!");
     return data;
   } catch (error: any) {
     console.error(`Error updating project ${id}:`, error);
@@ -163,13 +191,33 @@ export async function deleteProject(id: string) {
       throw new Error("Only the project creator can delete this project");
     }
     
-    // Proceed with deletion
+    // Delete project members
+    await supabase
+      .from('project_members')
+      .delete()
+      .eq('project_id', id);
+      
+    // Delete project applications
+    await supabase
+      .from('project_applications')
+      .delete()
+      .eq('project_id', id);
+    
+    // Delete project ideas
+    await supabase
+      .from('project_ideas')
+      .delete()
+      .eq('project_id', id);
+      
+    // Finally delete the project
     const { error } = await supabase
       .from('startup_projects')
       .delete()
       .eq('id', id);
       
     if (error) throw error;
+    
+    toast.success("Project deleted successfully!");
     return true;
   } catch (error: any) {
     console.error(`Error deleting project ${id}:`, error);
@@ -220,7 +268,7 @@ export async function getProjectMembers(projectId: string) {
       })
     );
     
-    console.log("Project members fetched:", members.length, members);
+    console.log("Project members fetched:", members.length);
     return members;
   } catch (error: any) {
     console.error(`Error getting members for project ${projectId}:`, error);
@@ -293,6 +341,7 @@ export async function addProjectMember(projectId: string, email: string, role: s
       .single();
       
     if (error) throw error;
+    toast.success(`Team member added successfully!`);
     return data;
   } catch (error: any) {
     console.error(`Error adding member to project ${projectId}:`, error);
@@ -336,6 +385,7 @@ export async function removeProjectMember(memberId: string) {
       .eq('id', memberId);
       
     if (error) throw error;
+    toast.success("Team member removed successfully!");
     return true;
   } catch (error: any) {
     console.error(`Error removing project member ${memberId}:`, error);

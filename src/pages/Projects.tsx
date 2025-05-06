@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import ProjectCard from "@/components/dashboard/ProjectCard";
@@ -37,10 +37,23 @@ const Projects = () => {
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
-  const { data: projects = [], isLoading, error } = useQuery({
+  // Use refetch to update projects when needed
+  const { 
+    data: projects = [], 
+    isLoading, 
+    error, 
+    refetch 
+  } = useQuery({
     queryKey: ['projects'],
-    queryFn: getProjects
+    queryFn: getProjects,
+    refetchOnWindowFocus: true, // Refetch when the window regains focus
+    staleTime: 30000 // Consider data stale after 30 seconds
   });
+  
+  // Refresh projects when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
   
   const projectCategories = ["SaaS", "AI", "Marketplace", "FinTech", "EdTech", "HealthTech", "Other"];
   const projectStages = ["idea", "mvp", "growth", "scaling"];
@@ -76,6 +89,11 @@ const Projects = () => {
   // Filter projects by stage for the tabs
   const activeProjects = filteredProjects.filter(p => ["mvp", "growth", "scaling"].includes(p.stage));
   const ideaProjects = filteredProjects.filter(p => p.stage === "idea");
+
+  // Manually trigger refresh when needed
+  const handleRefresh = () => {
+    refetch();
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">

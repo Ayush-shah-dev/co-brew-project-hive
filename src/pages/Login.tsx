@@ -1,9 +1,17 @@
 
 import Navbar from "@/components/layout/Navbar";
 import LoginForm from "@/components/auth/LoginForm";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
+  const { user } = useAuth();
+  
+  // If user is already logged in, redirect to projects page
+  if (user) {
+    return <Navigate to="/projects" replace />;
+  }
+  
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-background/80">
       <Navbar showAuth={false} />
