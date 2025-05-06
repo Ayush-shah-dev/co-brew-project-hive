@@ -51,7 +51,10 @@ const ProjectDetails = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
+  // Check if current user is the creator of the project
   const isCreator = user?.id === project?.creator_id;
+  
+  // Check if current user is a member of the project
   const isMember = members.some(member => member.user_id === user?.id);
 
   useEffect(() => {
@@ -160,6 +163,7 @@ const ProjectDetails = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  {/* Only show edit and delete buttons if user is the creator */}
                   {isCreator && (
                     <>
                       <Button variant="outline" onClick={() => toast.info("Edit functionality would be implemented here")}>
@@ -172,6 +176,7 @@ const ProjectDetails = () => {
                       </Button>
                     </>
                   )}
+                  {/* Only show apply button if user is not creator and not already a member */}
                   {!isCreator && !isMember && user && (
                     <ApplyProjectForm projectId={id} projectTitle={project.title} />
                   )}
@@ -232,6 +237,7 @@ const ProjectDetails = () => {
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   Timeline
                 </TabsTrigger>
+                {/* Only show applications tab to project creators */}
                 {isCreator && (
                   <TabsTrigger value="applications">
                     <UserPlus className="mr-2 h-4 w-4" />
@@ -276,6 +282,18 @@ const ProjectDetails = () => {
                           <div>
                             <h4 className="font-medium mb-2">Funding Goal</h4>
                             <p>${project.funding_goal.toLocaleString()}</p>
+                          </div>
+                        )}
+
+                        {/* Display roles needed */}
+                        {project.roles_needed && project.roles_needed.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Hiring For</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {project.roles_needed.map((role, idx) => (
+                                <Badge key={idx} variant="secondary" className="bg-primary/20 text-primary">{role}</Badge>
+                              ))}
+                            </div>
                           </div>
                         )}
                         
@@ -326,14 +344,17 @@ const ProjectDetails = () => {
                         <p className="text-muted-foreground">No team members found.</p>
                       )}
                       
-                      <Button 
-                        variant="outline" 
-                        className="w-full" 
-                        onClick={() => toast.info("Invite functionality would be implemented here")}
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        Invite Members
-                      </Button>
+                      {/* Only show invite button to project creators */}
+                      {isCreator && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          onClick={() => toast.info("Invite functionality would be implemented here")}
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Invite Members
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -110,6 +110,24 @@ export async function getProjectById(id: string) {
 
 export async function updateProject(id: string, projectData: Partial<StartupProject>) {
   try {
+    // First check if the user is the creator of the project
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    
+    const { data: projectData, error: projectError } = await supabase
+      .from('startup_projects')
+      .select('creator_id')
+      .eq('id', id)
+      .single();
+      
+    if (projectError) throw projectError;
+    
+    // Check if the current user is the creator
+    if (projectData.creator_id !== userData.user.id) {
+      throw new Error("Only the project creator can update this project");
+    }
+    
+    // Proceed with the update
     const { data, error } = await supabase
       .from('startup_projects')
       .update(projectData)
@@ -128,6 +146,24 @@ export async function updateProject(id: string, projectData: Partial<StartupProj
 
 export async function deleteProject(id: string) {
   try {
+    // First check if the user is the creator of the project
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    
+    const { data: projectData, error: projectError } = await supabase
+      .from('startup_projects')
+      .select('creator_id')
+      .eq('id', id)
+      .single();
+      
+    if (projectError) throw projectError;
+    
+    // Check if the current user is the creator
+    if (projectData.creator_id !== userData.user.id) {
+      throw new Error("Only the project creator can delete this project");
+    }
+    
+    // Proceed with deletion
     const { error } = await supabase
       .from('startup_projects')
       .delete()
@@ -193,6 +229,47 @@ export async function getProjectMembers(projectId: string) {
   }
 }
 
+// Function to check if user is a project creator
+export async function isProjectCreator(projectId: string) {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) return false;
+    
+    const { data: projectData, error: projectError } = await supabase
+      .from('startup_projects')
+      .select('creator_id')
+      .eq('id', projectId)
+      .single();
+      
+    if (projectError) return false;
+    
+    return projectData.creator_id === userData.user.id;
+  } catch (error) {
+    console.error("Error checking if user is project creator:", error);
+    return false;
+  }
+}
+
+// Function to check if user is a project member
+export async function isProjectMember(projectId: string) {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) return false;
+    
+    const { data, error } = await supabase
+      .from('project_members')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('user_id', userData.user.id)
+      .single();
+      
+    return !error && !!data;
+  } catch (error) {
+    console.error("Error checking if user is project member:", error);
+    return false;
+  }
+}
+
 export async function addProjectMember(projectId: string, email: string, role: string) {
   try {
     // First find the user ID from the email
@@ -226,6 +303,33 @@ export async function addProjectMember(projectId: string, email: string, role: s
 
 export async function removeProjectMember(memberId: string) {
   try {
+    // First check if the authenticated user is the creator of the project
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    
+    // Get the member data to get the project_id
+    const { data: memberData, error: memberError } = await supabase
+      .from('project_members')
+      .select('project_id, user_id')
+      .eq('id', memberId)
+      .single();
+      
+    if (memberError) throw memberError;
+    
+    // Get the project data to check if user is creator
+    const { data: projectData, error: projectError } = await supabase
+      .from('startup_projects')
+      .select('creator_id')
+      .eq('id', memberData.project_id)
+      .single();
+      
+    if (projectError) throw projectError;
+    
+    // Check if the user is the creator or if they are removing themselves
+    if (projectData.creator_id !== userData.user.id && memberData.user_id !== userData.user.id) {
+      throw new Error("Only the project creator can remove members");
+    }
+    
     const { error } = await supabase
       .from('project_members')
       .delete()

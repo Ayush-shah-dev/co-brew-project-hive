@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ProjectApplication, getProjectApplications, updateApplicationStatus } from "@/services/applicationService";
+import { toast } from "sonner";
 
 type ApplicationsListProps = {
   projectId: string;
@@ -79,8 +79,16 @@ const ApplicationsList = ({ projectId }: ApplicationsListProps) => {
         )
       );
       setConfirmAction({ open: false, type: 'approve', applicationId: '' });
+      
+      // Show appropriate toast message
+      if (status === 'approved') {
+        toast.success("Applicant has been approved and added to your team!");
+      } else {
+        toast.info("Application has been rejected");
+      }
     } catch (error) {
       console.error(`Failed to ${status} application:`, error);
+      toast.error(`Failed to ${status} application`);
     }
   };
 
