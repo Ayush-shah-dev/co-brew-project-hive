@@ -65,23 +65,31 @@ const ProjectCard = ({
     navigate(`/project/${id}/overview`);
   };
 
+  const truncateDescription = (text: string, maxLength = 120) => {
+    if (text.length <= maxLength) return text;
+    return text.substr(0, maxLength) + '...';
+  };
+
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 border-white/5 backdrop-blur-lg bg-card/80 text-white h-full flex flex-col">
-      <div className="h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+      {/* Top Stage Badge - Similar to Solvearn */}
+      <div className="flex">
+        <Badge className={`${statusColor} border rounded-none rounded-br-md text-xs px-3 py-0.5`}>
+          {status.charAt(0).toUpperCase() + status.slice(1)} Stage
+        </Badge>
+      </div>
+      
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="w-full">
             <h3 className="font-semibold text-lg line-clamp-1 mb-2">{title}</h3>
-            <div className="flex gap-2 flex-wrap">
-              <Badge className={`${statusColor} border`}>{status}</Badge>
-              <Badge variant="outline" className="border-white/20 bg-white/5">{category}</Badge>
-            </div>
+            <Badge variant="outline" className="border-white/20 bg-white/5 mt-1">{category}</Badge>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pb-4 flex-grow">
-        <p className="text-gray-300 text-sm line-clamp-2 mb-4 h-10">
-          {description}
+        <p className="text-gray-300 text-sm mb-4 min-h-[3rem]">
+          {truncateDescription(description)}
         </p>
         
         {roles_needed && roles_needed.length > 0 && (
@@ -91,11 +99,16 @@ const ProjectCard = ({
               <span className="font-medium">Hiring for:</span>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
-              {roles_needed.map((role, index) => (
+              {roles_needed.slice(0, 3).map((role, index) => (
                 <Badge key={index} variant="secondary" className="text-xs bg-white/10 text-white">
                   {role}
                 </Badge>
               ))}
+              {roles_needed.length > 3 && (
+                <Badge variant="outline" className="text-xs bg-transparent border-white/20 text-white">
+                  +{roles_needed.length - 3} more
+                </Badge>
+              )}
             </div>
           </div>
         )}
@@ -106,9 +119,9 @@ const ProjectCard = ({
               <span className="text-gray-300">Progress</span>
               <span className="font-medium text-white">{progress}%</span>
             </div>
-            <div className="project-card-progress w-full rounded-full overflow-hidden">
+            <div className="w-full h-1.5 rounded-full overflow-hidden bg-gray-700">
               <div 
-                className="project-card-progress-indicator h-full" 
+                className="h-full bg-gradient-to-r from-cobrew-500 to-purple-500" 
                 style={{ width: `${progress}%` }}
               ></div>
             </div>

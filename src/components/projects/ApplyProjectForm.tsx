@@ -9,12 +9,19 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetFooter
+  SheetFooter,
+  SheetClose
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { createApplication } from "@/services/applicationService";
 import { useAuth } from "@/hooks/useAuth";
+import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogDescription,
+  DialogTrigger
+} from "@/components/ui/dialog";
 
 type ApplyProjectFormProps = {
   projectId: string;
@@ -80,80 +87,166 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
     }
   };
 
+  // Use Dialog for larger screen, Sheet for mobile
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/80 w-full">Apply to Join Project</Button>
-      </SheetTrigger>
-      <SheetContent className="w-full md:max-w-md overflow-y-auto bg-card border-white/10">
-        <SheetHeader>
-          <SheetTitle className="text-xl text-white">Apply to {projectTitle}</SheetTitle>
-          <SheetDescription className="text-muted-foreground">
-            Answer these questions to apply. The project owner will review your application.
-          </SheetDescription>
-        </SheetHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6 py-6">
-          <div className="space-y-2">
-            <Label htmlFor="introduction" className="text-white">
-              Question 1: Briefly introduce yourself
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Textarea
-              id="introduction"
-              name="introduction"
-              placeholder="Hi! I'm a developer with a passion for..."
-              className="min-h-[80px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
-              value={formData.introduction}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="experience" className="text-white">
-              Question 2: What relevant experience do you have?
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Textarea
-              id="experience"
-              name="experience"
-              placeholder="I've worked on several projects involving..."
-              className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
-              value={formData.experience}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="motivation" className="text-white">
-              Question 3: Why are you interested in this specific project?
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Textarea
-              id="motivation"
-              name="motivation"
-              placeholder="I'm excited about this project because..."
-              className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
-              value={formData.motivation}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          
-          <SheetFooter className="pt-4">
-            <Button 
-              type="submit" 
-              className="w-full bg-primary hover:bg-primary/80"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Submitting..." : "Submit Application"}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+    <>
+      {/* For larger screens */}
+      <div className="hidden md:block">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/80 w-full">Apply to Join Project</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md bg-card border-white/10">
+            <DialogHeader>
+              <DialogTitle className="text-xl text-white">Apply to {projectTitle}</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                Answer these questions to apply. The project owner will review your application.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-6 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="introduction" className="text-white">
+                  Why do you want to join this team?
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Textarea
+                  id="introduction"
+                  name="introduction"
+                  placeholder="Hi! I'm a developer with a passion for..."
+                  className="min-h-[80px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  value={formData.introduction}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="experience" className="text-white">
+                  What is your previous experience/proof of skill for this role?
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Textarea
+                  id="experience"
+                  name="experience"
+                  placeholder="I've worked on several projects involving..."
+                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  value={formData.experience}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="motivation" className="text-white">
+                  Why are you interested in this specific project?
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Textarea
+                  id="motivation"
+                  name="motivation"
+                  placeholder="I'm excited about this project because..."
+                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  value={formData.motivation}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="pt-4">
+                <Button 
+                  type="submit" 
+                  className="w-full bg-primary hover:bg-primary/80"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+      
+      {/* For mobile screens */}
+      <div className="md:hidden">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/80 w-full">Apply to Join Project</Button>
+          </SheetTrigger>
+          <SheetContent className="w-full md:max-w-md overflow-y-auto bg-card border-white/10">
+            <SheetHeader>
+              <SheetTitle className="text-xl text-white">Apply to {projectTitle}</SheetTitle>
+              <SheetDescription className="text-muted-foreground">
+                Answer these questions to apply. The project owner will review your application.
+              </SheetDescription>
+            </SheetHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-6 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="mobile-introduction" className="text-white">
+                  Why do you want to join this team?
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Textarea
+                  id="mobile-introduction"
+                  name="introduction"
+                  placeholder="Hi! I'm a developer with a passion for..."
+                  className="min-h-[80px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  value={formData.introduction}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="mobile-experience" className="text-white">
+                  What is your previous experience/proof of skill for this role?
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Textarea
+                  id="mobile-experience"
+                  name="experience"
+                  placeholder="I've worked on several projects involving..."
+                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  value={formData.experience}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="mobile-motivation" className="text-white">
+                  Why are you interested in this specific project?
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Textarea
+                  id="mobile-motivation"
+                  name="motivation"
+                  placeholder="I'm excited about this project because..."
+                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  value={formData.motivation}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <SheetFooter className="pt-4">
+                <SheetClose asChild>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/80"
+                    disabled={isSubmitting}
+                    onClick={handleSubmit}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </Button>
+                </SheetClose>
+              </SheetFooter>
+            </form>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 };
 

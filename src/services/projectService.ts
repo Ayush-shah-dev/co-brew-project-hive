@@ -113,6 +113,57 @@ export async function getMyProjects() {
   }
 }
 
+export async function getMyJoinedProjects() {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return [];
+    
+    // Get projects where the user is a member (not necessarily the creator)
+    const { data: memberships, error: membershipError } = await supabase
+      .from('project_members')
+      .select('project_id')
+      .eq('user_id', userData.user.id);
+      
+    if (membershipError) throw membershipError;
+    
+    if (!memberships || memberships.length === 0) return [];
+    
+    const projectIds = memberships.map(m => m.project_id);
+    
+    // Get the actual projects
+    const { data, error } = await supabase
+      .from('startup_projects')
+      .select('*')
+      .in('id', projectIds)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error("Error getting joined projects:", error);
+    toast.error(error.message || "Failed to fetch projects you've joined");
+    return [];
+  }
+}
+
+export async function getFeaturedProjects(limit = 3) {
+  try {
+    // Fetch featured projects - for simplicity, just get the most recent ones
+    // In a real app, you might want to have a "featured" flag in the database
+    const { data, error } = await supabase
+      .from('startup_projects')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error("Error getting featured projects:", error);
+    return [];
+  }
+}
+
 export async function getProjectById(id: string) {
   try {
     const { data, error } = await supabase
@@ -269,6 +320,22 @@ export async function getProjectMembers(projectId: string) {
     console.error(`Error getting members for project ${projectId}:`, error);
     toast.error(error.message || "Failed to fetch project members");
     return [];
+  }
+}
+
+// Function to get project member count
+export async function getProjectMemberCount(projectId: string): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('project_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', projectId);
+      
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error(`Error getting member count for project ${projectId}:`, error);
+    return 0;
   }
 }
 
