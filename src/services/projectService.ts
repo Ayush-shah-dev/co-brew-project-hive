@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -68,10 +67,10 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
   }
 }
 
+// PUBLIC: Get all projects for everyone - no auth required
 export async function getProjects() {
   try {
-    // Fetch all projects without filtering by user ID to ensure discoverability
-    console.log("Fetching all projects for discovery");
+    console.log("Fetching all projects for public viewing");
     
     const { data, error } = await supabase
       .from('startup_projects')
@@ -83,7 +82,7 @@ export async function getProjects() {
       throw error;
     }
     
-    console.log(`Fetched ${data?.length || 0} projects`);
+    console.log(`Fetched ${data?.length || 0} projects for public display`);
     return data || [];
   } catch (error: any) {
     console.error("Error getting projects:", error);
@@ -148,7 +147,7 @@ export async function getMyJoinedProjects() {
 
 export async function getFeaturedProjects(limit = 3) {
   try {
-    // Fetch featured projects - for simplicity, just get the most recent ones
+    // Fetch featured projects - all projects are now publicly visible
     // In a real app, you might want to have a "featured" flag in the database
     const { data, error } = await supabase
       .from('startup_projects')
@@ -157,6 +156,8 @@ export async function getFeaturedProjects(limit = 3) {
       .limit(limit);
       
     if (error) throw error;
+    
+    console.log(`Fetched ${data?.length || 0} featured projects for public display`);
     return data || [];
   } catch (error: any) {
     console.error("Error getting featured projects:", error);
@@ -166,6 +167,7 @@ export async function getFeaturedProjects(limit = 3) {
 
 export async function getProjectById(id: string) {
   try {
+    // Public access to any project by ID
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
@@ -294,7 +296,7 @@ export async function getProjectMembers(projectId: string) {
         try {
           const { data: userData, error: userError } = await supabase
             .from('profiles')
-            .select('first_name, last_name, avatar_url')
+            .select('email, avatar_url')
             .eq('id', member.user_id)
             .single();
             
@@ -305,7 +307,11 @@ export async function getProjectMembers(projectId: string) {
           
           return {
             ...member,
-            user: userData
+            user: {
+              ...userData,
+              first_name: "Team", // Placeholder since profiles table doesn't have first_name
+              last_name: "Member"  // Placeholder since profiles table doesn't have last_name
+            }
           };
         } catch (error) {
           console.warn(`Error processing member ${member.id}:`, error);
@@ -323,7 +329,7 @@ export async function getProjectMembers(projectId: string) {
   }
 }
 
-// Function to get project member count
+// Function to get project member count - publicly accessible
 export async function getProjectMemberCount(projectId: string): Promise<number> {
   try {
     const { count, error } = await supabase
@@ -453,5 +459,78 @@ export async function removeProjectMember(memberId: string) {
     console.error(`Error removing project member ${memberId}:`, error);
     toast.error(error.message || "Failed to remove project member");
     throw error;
+  }
+}
+
+// Function to check if user has applied to a project - returns application status if exists
+export async function getUserApplicationStatus(projectId: string) {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return null;
+    
+    const { data, error } = await supabase
+      .from('project_applications')
+      .select('status')
+      .eq('project_id', projectId)
+      .eq('applicant_id', userData.user.id)
+      .single();
+      
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        return null;
+      }
+      throw error;
+    }
+    
+    return data?.status;
+  } catch (error) {
+    console.error("Error checking application status:", error);
+    return null;
+  }
+}
+
+// Get all projects with application status for the current user
+export async function getProjectsWithApplicationStatus() {
+  try {
+    // First fetch all projects - public access
+    const { data: projects, error: projectsError } = await supabase
+      .from('startup_projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (projectsError) throw projectsError;
+    
+    // Check if user is authenticated
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
+      // Return projects without application status for anonymous users
+      return projects || [];
+    }
+    
+    // Get all applications for the current user
+    const { data: applications, error: applicationsError } = await supabase
+      .from('project_applications')
+      .select('project_id, status')
+      .eq('applicant_id', userData.user.id);
+      
+    if (applicationsError) throw applicationsError;
+    
+    // Create a map of project_id -> application_status
+    const applicationMap = applications?.reduce((map, app) => {
+      map[app.project_id] = app.status;
+      return map;
+    }, {} as Record<string, string>) || {};
+    
+    // Merge project data with application status
+    const projectsWithStatus = projects?.map(project => ({
+      ...project,
+      application_status: applicationMap[project.id] || null
+    })) || [];
+    
+    return projectsWithStatus;
+  } catch (error: any) {
+    console.error("Error getting projects with application status:", error);
+    toast.error(error.message || "Failed to fetch projects");
+    return [];
   }
 }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -7,7 +8,7 @@ import JoinProjectButton from "@/components/dashboard/JoinProjectButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, Filter, RefreshCw, ArrowLeft, ArrowRight } from "lucide-react";
-import { getProjects, StartupProject, ProjectCategory, ProjectStage } from "@/services/projectService";
+import { getProjectsWithApplicationStatus, StartupProject, ProjectCategory, ProjectStage } from "@/services/projectService";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Select,
@@ -31,7 +32,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
 
 const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,7 +41,7 @@ const Projects = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { user } = useAuth();
   
-  // Use a more aggressive stale time to ensure fresh data is always fetched
+  // Use the new function that gets projects with application status
   const { 
     data: projects = [], 
     isLoading, 
@@ -49,8 +49,8 @@ const Projects = () => {
     refetch,
     isFetching 
   } = useQuery({
-    queryKey: ['projects'],
-    queryFn: getProjects,
+    queryKey: ['projects-with-status'],
+    queryFn: getProjectsWithApplicationStatus,
     refetchOnWindowFocus: true,
     staleTime: 0, // Always consider data stale to ensure fresh data
     refetchOnMount: true,
@@ -68,12 +68,12 @@ const Projects = () => {
   // Extract all unique roles from all projects
   const allRoles = Array.from(
     new Set(
-      projects.flatMap((project: StartupProject) => project.roles_needed || [])
+      projects.flatMap((project: any) => project.roles_needed || [])
     )
   ).filter(Boolean);
   
   // Apply all filters
-  const filteredProjects = projects.filter((project: StartupProject) => {
+  const filteredProjects = projects.filter((project: any) => {
     const matchesSearch = 
       project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -86,7 +86,7 @@ const Projects = () => {
     const matchesRole = 
       !roleFilter || 
       (project.roles_needed && 
-       project.roles_needed.some(role => 
+       project.roles_needed.some((role: string) => 
          role.toLowerCase().includes(roleFilter.toLowerCase())
        ));
     
@@ -94,12 +94,12 @@ const Projects = () => {
   });
   
   // Filter projects by stage for the tabs
-  const activeProjects = filteredProjects.filter(p => ["mvp", "growth", "scaling"].includes(p.stage));
-  const ideaProjects = filteredProjects.filter(p => p.stage === "idea");
+  const activeProjects = filteredProjects.filter((p: any) => ["mvp", "growth", "scaling"].includes(p.stage));
+  const ideaProjects = filteredProjects.filter((p: any) => p.stage === "idea");
 
   // Get featured projects - simply select some of the most recent ones
   const featuredProjects = projects
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
   // Manually trigger refresh when needed
@@ -110,6 +110,8 @@ const Projects = () => {
 
   // Count projects matching filters
   const projectCount = filteredProjects.length;
+  
+  console.log("Rendering projects page with", projects.length, "projects");
 
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
@@ -334,7 +336,7 @@ const Projects = () => {
                     <div className={viewMode === "grid" 
                       ? "grid grid-cols-1 md:grid-cols-3 gap-6" 
                       : "space-y-4"}>
-                      {featuredProjects.map((project: StartupProject) => (
+                      {featuredProjects.map((project: any) => (
                         <ProjectCard 
                           key={project.id}
                           id={project.id}
@@ -347,6 +349,7 @@ const Projects = () => {
                           dueDate="2024-08-30" // This would be a new field to add
                           roles_needed={project.roles_needed}
                           creator_id={project.creator_id}
+                          application_status={project.application_status}
                         />
                       ))}
                     </div>
@@ -373,7 +376,7 @@ const Projects = () => {
                       <div className={viewMode === "grid" 
                         ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
                         : "space-y-4"}>
-                        {filteredProjects.map((project: StartupProject) => (
+                        {filteredProjects.map((project: any) => (
                           <ProjectCard 
                             key={project.id}
                             id={project.id}
@@ -386,6 +389,7 @@ const Projects = () => {
                             dueDate="2024-08-30"
                             roles_needed={project.roles_needed}
                             creator_id={project.creator_id}
+                            application_status={project.application_status}
                           />
                         ))}
                         {filteredProjects.length === 0 && (
