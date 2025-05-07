@@ -20,6 +20,7 @@ export interface ProjectCardProps {
   dueDate?: string;
   roles_needed?: string[];
   creator_id?: string;
+  application_status?: 'pending' | 'approved' | 'rejected' | null;
 }
 
 const getStatusColor = (status: ProjectStatus) => {
@@ -37,6 +38,21 @@ const getStatusColor = (status: ProjectStatus) => {
   }
 };
 
+const getApplicationStatusBadge = (status: 'pending' | 'approved' | 'rejected' | null) => {
+  if (!status) return null;
+  
+  switch (status) {
+    case 'pending':
+      return <Badge className="bg-yellow-400/20 text-yellow-300 border-yellow-400/40 border">Application Pending</Badge>;
+    case 'approved':
+      return <Badge className="bg-green-400/20 text-green-300 border-green-400/40 border">Application Approved</Badge>;
+    case 'rejected':
+      return <Badge className="bg-red-400/20 text-red-300 border-red-400/40 border">Application Rejected</Badge>;
+    default:
+      return null;
+  }
+};
+
 const ProjectCard = ({
   id,
   title,
@@ -48,6 +64,7 @@ const ProjectCard = ({
   dueDate,
   roles_needed = [],
   creator_id,
+  application_status
 }: ProjectCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -73,10 +90,12 @@ const ProjectCard = ({
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 border-white/5 backdrop-blur-lg bg-card/80 text-white h-full flex flex-col">
       {/* Top Stage Badge - Similar to Solvearn */}
-      <div className="flex">
+      <div className="flex justify-between">
         <Badge className={`${statusColor} border rounded-none rounded-br-md text-xs px-3 py-0.5`}>
           {status.charAt(0).toUpperCase() + status.slice(1)} Stage
         </Badge>
+        
+        {application_status && getApplicationStatusBadge(application_status)}
       </div>
       
       <CardHeader className="pb-2">
@@ -150,7 +169,7 @@ const ProjectCard = ({
           <ArrowRight size={16} />
         </Button>
         
-        {roles_needed && roles_needed.length > 0 && !isCreator && user && (
+        {roles_needed && roles_needed.length > 0 && !isCreator && user && !application_status && (
           <ApplyProjectForm 
             projectId={id} 
             projectTitle={title} 

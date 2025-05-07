@@ -40,7 +40,7 @@ const App = () => (
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/project/:id/:tab" element={<ProjectDetails />} />
             </Route>
