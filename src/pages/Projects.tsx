@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -29,6 +28,7 @@ import {
   ToggleGroupItem
 } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,8 +36,9 @@ const Projects = () => {
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { user } = useAuth();
   
-  // Use refetch to update projects when needed
+  // Use refetch to update projects when needed and ensure the cache is invalidated
   const { 
     data: projects = [], 
     isLoading, 
@@ -46,14 +47,15 @@ const Projects = () => {
   } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
-    refetchOnWindowFocus: true, // Refetch when the window regains focus
-    staleTime: 30000 // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true,
+    staleTime: 5000, // Consider data stale after just 5 seconds to ensure fresh data
   });
   
-  // Refresh projects when component mounts
+  // Refresh projects when component mounts or when user changes
   useEffect(() => {
+    console.log("Refreshing projects data");
     refetch();
-  }, [refetch]);
+  }, [refetch, user?.id]); // Add user ID as dependency to refresh when user changes
   
   const projectCategories = ["SaaS", "AI", "Marketplace", "FinTech", "EdTech", "HealthTech", "Other"];
   const projectStages = ["idea", "mvp", "growth", "scaling"];

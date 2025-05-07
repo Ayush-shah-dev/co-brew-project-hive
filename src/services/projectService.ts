@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -70,11 +69,10 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
-    // Get current user
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
+    // IMPORTANT CHANGE: Fetch all projects without filtering by user ID
+    // This ensures all users can see all projects for collaboration
+    console.log("Fetching all projects for discovery");
     
-    // Fetch all active projects (not deleted)
     const { data, error } = await supabase
       .from('startup_projects')
       .select('*')
