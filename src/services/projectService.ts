@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -69,8 +70,7 @@ export async function createProject(projectData: Omit<StartupProject, 'id' | 'cr
 
 export async function getProjects() {
   try {
-    // IMPORTANT CHANGE: Fetch all projects without filtering by user ID
-    // This ensures all users can see all projects for collaboration
+    // Fetch all projects without filtering by user ID to ensure discoverability
     console.log("Fetching all projects for discovery");
     
     const { data, error } = await supabase
@@ -83,11 +83,8 @@ export async function getProjects() {
       throw error;
     }
     
-    // Filter out any projects marked as deleted (if we implement soft delete in the future)
-    const activeProjects = data || [];
-    console.log("Active projects fetched:", activeProjects.length);
-    
-    return activeProjects;
+    console.log(`Fetched ${data?.length || 0} projects`);
+    return data || [];
   } catch (error: any) {
     console.error("Error getting projects:", error);
     toast.error(error.message || "Failed to fetch projects");

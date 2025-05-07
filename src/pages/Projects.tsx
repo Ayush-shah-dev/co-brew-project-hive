@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -6,7 +7,7 @@ import CreateProjectButton from "@/components/dashboard/CreateProjectButton";
 import JoinProjectButton from "@/components/dashboard/JoinProjectButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Filter } from "lucide-react";
+import { Search, Loader2, Filter, RefreshCw } from "lucide-react";
 import { getProjects, StartupProject, ProjectCategory, ProjectStage } from "@/services/projectService";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -29,6 +30,8 @@ import {
 } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,22 +41,24 @@ const Projects = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { user } = useAuth();
   
-  // Use refetch to update projects when needed and ensure the cache is invalidated
+  // Use a more aggressive stale time to ensure fresh data is always fetched
   const { 
     data: projects = [], 
     isLoading, 
     error, 
-    refetch 
+    refetch,
+    isFetching 
   } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
     refetchOnWindowFocus: true,
-    staleTime: 5000, // Consider data stale after just 5 seconds to ensure fresh data
+    staleTime: 0, // Always consider data stale to ensure fresh data
+    refetchOnMount: true,
   });
   
   // Refresh projects when component mounts or when user changes
   useEffect(() => {
-    console.log("Refreshing projects data");
+    console.log("Refreshing projects data - component mount or user change");
     refetch();
   }, [refetch, user?.id]); // Add user ID as dependency to refresh when user changes
   
@@ -94,6 +99,7 @@ const Projects = () => {
 
   // Manually trigger refresh when needed
   const handleRefresh = () => {
+    toast.info("Refreshing projects...");
     refetch();
   };
 
@@ -129,6 +135,15 @@ const Projects = () => {
               </div>
               
               <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={handleRefresh}
+                  className="bg-white/10 border-white/10 hover:bg-white/20 text-white"
+                >
+                  <RefreshCw size={18} className={isFetching ? "animate-spin" : ""} />
+                </Button>
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-white/10 hover:bg-white/20 text-white h-10 px-4 py-2">
@@ -225,6 +240,10 @@ const Projects = () => {
             ) : error ? (
               <div className="py-10 text-center">
                 <p className="text-red-500">Failed to load projects. Please try again.</p>
+                <Button onClick={handleRefresh} variant="outline" className="mt-4">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Retry
+                </Button>
               </div>
             ) : (
               <Tabs defaultValue="all" className="mb-6">
