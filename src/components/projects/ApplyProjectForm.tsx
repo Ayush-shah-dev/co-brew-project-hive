@@ -87,6 +87,24 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
     }
   };
 
+  // Handle case when user is not logged in
+  if (!user) {
+    return (
+      <Button 
+        onClick={() => toast.error("You must be logged in to apply", {
+          description: "Please sign in or create an account to apply for this project.",
+          action: {
+            label: "Login",
+            onClick: () => window.location.href = "/login"
+          }
+        })} 
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+      >
+        Apply to Join Project
+      </Button>
+    );
+  }
+
   // Use Dialog for larger screen, Sheet for mobile
   return (
     <>
@@ -94,12 +112,14 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
       <div className="hidden md:block">
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/80 w-full">Apply to Join Project</Button>
+            <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+              Apply to Join Project
+            </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-card border-white/10">
+          <DialogContent className="max-w-md bg-slate-900 border-purple-500/20">
             <DialogHeader>
               <DialogTitle className="text-xl text-white">Apply to {projectTitle}</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
+              <DialogDescription className="text-gray-400">
                 Answer these questions to apply. The project owner will review your application.
               </DialogDescription>
             </DialogHeader>
@@ -108,13 +128,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="space-y-2">
                 <Label htmlFor="introduction" className="text-white">
                   Why do you want to join this team?
-                  <span className="text-destructive"> *</span>
+                  <span className="text-pink-500"> *</span>
                 </Label>
                 <Textarea
                   id="introduction"
                   name="introduction"
                   placeholder="Hi! I'm a developer with a passion for..."
-                  className="min-h-[80px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  className="min-h-[80px] bg-slate-800/50 border-purple-500/20 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400"
                   value={formData.introduction}
                   onChange={handleInputChange}
                   required
@@ -124,13 +144,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="space-y-2">
                 <Label htmlFor="experience" className="text-white">
                   What is your previous experience/proof of skill for this role?
-                  <span className="text-destructive"> *</span>
+                  <span className="text-pink-500"> *</span>
                 </Label>
                 <Textarea
                   id="experience"
                   name="experience"
                   placeholder="I've worked on several projects involving..."
-                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  className="min-h-[100px] bg-slate-800/50 border-purple-500/20 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400"
                   value={formData.experience}
                   onChange={handleInputChange}
                   required
@@ -140,13 +160,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="space-y-2">
                 <Label htmlFor="motivation" className="text-white">
                   Why are you interested in this specific project?
-                  <span className="text-destructive"> *</span>
+                  <span className="text-pink-500"> *</span>
                 </Label>
                 <Textarea
                   id="motivation"
                   name="motivation"
                   placeholder="I'm excited about this project because..."
-                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  className="min-h-[100px] bg-slate-800/50 border-purple-500/20 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400"
                   value={formData.motivation}
                   onChange={handleInputChange}
                   required
@@ -156,7 +176,7 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="pt-4">
                 <Button 
                   type="submit" 
-                  className="w-full bg-primary hover:bg-primary/80"
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Application"}
@@ -171,12 +191,14 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
       <div className="md:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/80 w-full">Apply to Join Project</Button>
+            <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+              Apply to Join Project
+            </Button>
           </SheetTrigger>
-          <SheetContent className="w-full md:max-w-md overflow-y-auto bg-card border-white/10">
+          <SheetContent className="w-full md:max-w-md overflow-y-auto bg-slate-900 border-purple-500/20">
             <SheetHeader>
               <SheetTitle className="text-xl text-white">Apply to {projectTitle}</SheetTitle>
-              <SheetDescription className="text-muted-foreground">
+              <SheetDescription className="text-gray-400">
                 Answer these questions to apply. The project owner will review your application.
               </SheetDescription>
             </SheetHeader>
@@ -185,13 +207,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="space-y-2">
                 <Label htmlFor="mobile-introduction" className="text-white">
                   Why do you want to join this team?
-                  <span className="text-destructive"> *</span>
+                  <span className="text-pink-500"> *</span>
                 </Label>
                 <Textarea
                   id="mobile-introduction"
                   name="introduction"
                   placeholder="Hi! I'm a developer with a passion for..."
-                  className="min-h-[80px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  className="min-h-[80px] bg-slate-800/50 border-purple-500/20 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400"
                   value={formData.introduction}
                   onChange={handleInputChange}
                   required
@@ -201,13 +223,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="space-y-2">
                 <Label htmlFor="mobile-experience" className="text-white">
                   What is your previous experience/proof of skill for this role?
-                  <span className="text-destructive"> *</span>
+                  <span className="text-pink-500"> *</span>
                 </Label>
                 <Textarea
                   id="mobile-experience"
                   name="experience"
                   placeholder="I've worked on several projects involving..."
-                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  className="min-h-[100px] bg-slate-800/50 border-purple-500/20 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400"
                   value={formData.experience}
                   onChange={handleInputChange}
                   required
@@ -217,13 +239,13 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               <div className="space-y-2">
                 <Label htmlFor="mobile-motivation" className="text-white">
                   Why are you interested in this specific project?
-                  <span className="text-destructive"> *</span>
+                  <span className="text-pink-500"> *</span>
                 </Label>
                 <Textarea
                   id="mobile-motivation"
                   name="motivation"
                   placeholder="I'm excited about this project because..."
-                  className="min-h-[100px] bg-secondary/50 border-white/10 text-white placeholder:text-muted-foreground"
+                  className="min-h-[100px] bg-slate-800/50 border-purple-500/20 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400"
                   value={formData.motivation}
                   onChange={handleInputChange}
                   required
@@ -231,16 +253,14 @@ const ApplyProjectForm = ({ projectId, projectTitle }: ApplyProjectFormProps) =>
               </div>
               
               <SheetFooter className="pt-4">
-                <SheetClose asChild>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-primary hover:bg-primary/80"
-                    disabled={isSubmitting}
-                    onClick={handleSubmit}
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Application"}
-                  </Button>
-                </SheetClose>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  disabled={isSubmitting}
+                  onClick={handleSubmit}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Application"}
+                </Button>
               </SheetFooter>
             </form>
           </SheetContent>

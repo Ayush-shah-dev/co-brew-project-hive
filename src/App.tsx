@@ -37,8 +37,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/projects" element={<Projects />} /> {/* Projects page is now public */}
-            <Route path="/project/:id/:tab" element={<ProjectDetails />} /> {/* Project details are also public */}
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/project/:id/:tab" element={<ProjectDetails />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>

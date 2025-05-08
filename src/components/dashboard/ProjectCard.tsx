@@ -88,8 +88,8 @@ const ProjectCard = ({
   };
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 border-white/5 backdrop-blur-lg bg-card/80 text-white h-full flex flex-col">
-      {/* Top Stage Badge - Similar to Solvearn */}
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10 hover:translate-y-[-4px] border-white/10 backdrop-blur-lg bg-gradient-to-br from-slate-800/90 to-slate-900/90 text-white h-full flex flex-col">
+      {/* Top Stage Badge - Similar to Solvearn but enhanced */}
       <div className="flex justify-between">
         <Badge className={`${statusColor} border rounded-none rounded-br-md text-xs px-3 py-0.5`}>
           {status.charAt(0).toUpperCase() + status.slice(1)} Stage
@@ -119,7 +119,7 @@ const ProjectCard = ({
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {roles_needed.slice(0, 3).map((role, index) => (
-                <Badge key={index} variant="secondary" className="text-xs bg-white/10 text-white">
+                <Badge key={index} variant="secondary" className="text-xs bg-purple-500/20 text-purple-200 border border-purple-500/20">
                   {role}
                 </Badge>
               ))}
@@ -140,7 +140,7 @@ const ProjectCard = ({
             </div>
             <div className="w-full h-1.5 rounded-full overflow-hidden bg-gray-700">
               <div 
-                className="h-full bg-gradient-to-r from-cobrew-500 to-purple-500" 
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500" 
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -169,11 +169,20 @@ const ProjectCard = ({
           <ArrowRight size={16} />
         </Button>
         
-        {roles_needed && roles_needed.length > 0 && !isCreator && user && !application_status && (
+        {roles_needed && roles_needed.length > 0 && !isCreator && !application_status && (
           <ApplyProjectForm 
             projectId={id} 
             projectTitle={title} 
           />
+        )}
+        
+        {application_status === 'approved' && (
+          <Button 
+            onClick={handleClick}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            Go to Project Dashboard
+          </Button>
         )}
       </CardFooter>
     </Card>
