@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -32,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,6 +40,7 @@ const Projects = () => {
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Use the function that gets projects with application status
   const { 

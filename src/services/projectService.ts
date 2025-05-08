@@ -14,6 +14,7 @@ export type StartupProject = {
   creator_id: string;
   created_at: string;
   updated_at: string;
+  application_status?: 'pending' | 'approved' | 'rejected' | null; // Added application_status to the type
 };
 
 export type ProjectMember = {
