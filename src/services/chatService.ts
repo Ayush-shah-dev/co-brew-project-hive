@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -131,10 +130,10 @@ export async function sendProjectMessage(projectId: string, content: string): Pr
   }
 }
 
-export async function setupMessageSubscription(
+export function setupMessageSubscription(
   projectId: string, 
   callback: (message: ProjectChatMessage) => void
-): Promise<() => void> {
+): () => void {
   const subscription = supabase
     .channel(`project-messages-${projectId}`)
     .on(

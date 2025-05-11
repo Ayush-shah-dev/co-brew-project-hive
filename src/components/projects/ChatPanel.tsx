@@ -36,12 +36,13 @@ const ChatPanel = ({ projectId }: ChatPanelProps) => {
     
     fetchMessages();
     
-    // Subscribe to new messages
+    // Setup subscription - now it directly returns the unsubscribe function
     const unsubscribe = setupMessageSubscription(projectId, (message) => {
       setMessages(prev => [...prev, message]);
     });
     
     return () => {
+      // Call the unsubscribe function directly
       unsubscribe();
     };
   }, [projectId]);
